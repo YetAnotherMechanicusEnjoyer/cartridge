@@ -2,9 +2,18 @@ CC			=	lcc
 CFLAGS	=	-Iinclude -Wa-l -Wl-m -Wl-j -Wl-yt0x1B -Wl-ya4
 
 BINARY	=	CARTRIDGE.gb
-FILES		=	main.c	\
-					math_asm.s
-SRC			=	$(addprefix src/, $(FILES))
+
+ASM_FILES	=	engine.s	\
+						sram.s		\
+						text.s		\
+						utoa.s		\
+						vram.s
+
+C_FILES		=	asm_wrapper.c	\
+						main.c
+
+SRC	=	$(addprefix src/asm/, $(ASM_FILES))	\
+			$(addprefix src/c/, $(C_FILES))
 
 all: $(BINARY)
 
