@@ -1,7 +1,7 @@
 #include "asm.h"
-#include "asm_wrapper.h"
 #include "font.h"
 #include "game.h"
+#include "gb/gb.h"
 
 const unsigned char player_tile[] = {
   0xFF,0xFF, 0x81,0x81, 0x81,0x81, 0x99, 0x99,
@@ -14,9 +14,9 @@ uint8_t* asm_src;
 uint8_t* asm_dest;
 uint16_t asm_size;
 
-uint8_t scroll_x_val = 0;
+static void void_init(GameData *data) { data->state = TITLE; }
 
-void init_game(void) {
+static void init_game(void) {
   asm_src = (uint8_t*)my_map;
   asm_dest = (uint8_t*)VRAM_ADDR;
   asm_size = 360;
@@ -35,7 +35,6 @@ void init_game(void) {
   }
 
   init_window_layer();
-
   move_win(7, 0);
 
   STAT_REG |= STATF_LYC;
@@ -56,6 +55,16 @@ void init_game(void) {
 int main(void) {
   uint8_t keys_pressed;
 
+  Game registry[] = {
+    { .name="Test Game", .init=test_init, .game=test_game },
+    { .name="Not a Pong", .init=void_init, .game=title_state },
+    { .name="Testing (again)", .init=void_init, .game=title_state },
+    { .name="Menu", .init=void_init, .game=title_state },
+  };
+
+  uint8_t len = 0;
+  for(; registry[len]; len++);
+
   GameData data = {
     .state=TITLE,
     .player_x=80,
@@ -64,6 +73,9 @@ int main(void) {
     .joypad_current=joypad(),
     .joypad_previous=joypad(),
     .frame_counter=0,
+    .current_game_id=0,
+    .n_games=len,
+    .games=registry,
   };
 
   init_game();
@@ -71,60 +83,19 @@ int main(void) {
   while(1) {
     vsync();
     data.frame_counter++;
-
     data.joypad_previous = data.joypad_current;
     data.joypad_current = joypad();
-
     keys_pressed = data.joypad_current & ~data.joypad_previous;
 
     switch (data.state) {
       case TITLE:
-        move_sprite(0, 0, 0);
-        display_middle(9, "PRESS START");
-        display_middle(10, "TO PLAY");
-
-        if (keys_pressed & J_START) {
-          clear_line(9);
-          clear_line(10);
-          data.player_x = 80;
-          data.player_y = 72;
-          scroll_x_val = 0;
-          data.state = MINIGAME;
-          display_message(0, 0, "SCORE:");
-          update_score_display(6, 0, data.best_score);
-        }
+        title_state(&data, keys_pressed);
         break;
-
-      case MINIGAME:
-        if (data.joypad_current & J_UP && data.player_y > 16) data.player_y -= 2;
-        if (data.joypad_current & J_DOWN && data.player_y < 152) data.player_y += 2;
-        if (data.joypad_current & J_LEFT && data.player_x > 8) data.player_x -= 2;
-        if (data.joypad_current & J_RIGHT && data.player_x < 160) data.player_x += 2;
-
-
-        if (keys_pressed & J_A) {
-          data.best_score++;
-          save_score(data.best_score);
-          update_score_display(6, 0, data.best_score);
-        }
-
-        move_sprite(0, data.player_x, data.player_y);
-
-        if (keys_pressed & J_SELECT) {
-          clear_message(0, 1, 11);
-          data.state = GAMEOVER;
-        }
+      case GAME:
+        data.games[data.current_game_id].game(&data, keys_pressed);
         break;
-
       case GAMEOVER:
-        move_sprite(0, 0, 0);
-        display_middle(8, "GAME OVER");
-        display_middle(10, "PRESS START");
-
-        if (keys_pressed & J_START) {
-          clear_window();
-          data.state = TITLE;
-        }
+        gameover_state(&data, keys_pressed);
         break;
     }
   }

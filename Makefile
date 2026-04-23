@@ -9,8 +9,10 @@ ASM_FILES	=	engine.s	\
 						utoa.s		\
 						vram.s
 
-C_FILES		=	asm_wrapper.c	\
-						main.c
+C_FILES		=	asm_wrapper.c			\
+						default_states.c	\
+						main.c						\
+						test.c
 
 SRC	=	$(addprefix src/asm/, $(ASM_FILES))	\
 			$(addprefix src/c/, $(C_FILES))

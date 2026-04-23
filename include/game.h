@@ -5,11 +5,23 @@
 
 typedef enum {
   TITLE,
-  MINIGAME,
+  GAME,
   GAMEOVER
 } GameState;
 
+typedef struct GameData GameData;
+
+typedef void (*GameFunction)(GameData*, uint8_t);
+
+typedef void (*InitFunction)(GameData*);
+
 typedef struct {
+  char* name;
+  GameFunction game;
+  InitFunction init;
+} Game;
+
+struct GameData {
   /* State */
   GameState state;
 
@@ -26,6 +38,17 @@ typedef struct {
 
   /* Engine */
   uint8_t frame_counter;
-} GameData;
+
+  /* Games */
+  uint8_t current_game_id;
+  uint8_t n_games;
+  Game* games;
+};
+
+void title_state(GameData* data, uint8_t keys_pressed);
+void gameover_state(GameData* data, uint8_t keys_pressed);
+
+void test_init(GameData* data);
+void test_game(GameData* data, uint8_t keys_pressed);
 
 #endif // !GAME_H
