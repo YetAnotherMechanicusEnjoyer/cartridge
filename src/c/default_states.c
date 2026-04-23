@@ -13,12 +13,14 @@ void title_state(GameData* data, uint8_t keys_pressed) {
 
   for(uint8_t i = 0; i < data->n_games; i++) {
     char buff[21] = {0};
+    uint8_t offset = 0;
     clear_line(i + 6);
     if (data->current_game_id == i) {
       strcpy(buff, ">");
+      offset = 1;
     }
     strcat(buff, data->games[i].name);
-    display_message(2, i + 6, buff);
+    display_message(2 - offset, i + 6, buff);
   }
 
   if (keys_pressed & J_START) {
