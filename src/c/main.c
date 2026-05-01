@@ -1,7 +1,8 @@
 #include "asm.h"
 #include "font.h"
 #include "game.h"
-#include "gb/gb.h"
+#include "input.h"
+#include "timers.h"
 
 const unsigned char player_tile[] = {
   0xFF,0xFF, 0x81,0x81, 0x81,0x81, 0x99, 0x99,
@@ -53,8 +54,6 @@ static void init_game(void) {
 }
 
 int main(void) {
-  uint8_t keys_pressed;
-
   Game registry[] = {
     { .name="Test Game", .init=test_init, .game=test_game },
     { .name="Not a Pong", .init=void_init, .game=title_state },
@@ -62,16 +61,13 @@ int main(void) {
     { .name="Menu", .init=void_init, .game=title_state },
   };
 
-  uint8_t len = 0;
-  for(; registry[len]; len++);
+  uint8_t len = sizeof(registry) / sizeof(registry[0]);
 
   GameData data = {
     .state=TITLE,
     .player_x=80,
     .player_y=72,
-    .best_score=load_score(),
-    .joypad_current=joypad(),
-    .joypad_previous=joypad(),
+    .best_score=0,
     .frame_counter=0,
     .current_game_id=0,
     .n_games=len,
@@ -82,20 +78,25 @@ int main(void) {
 
   while(1) {
     vsync();
+    timers_update();
+    input_update();
+
+    display_message(0, HEIGHT - 2, "p:");
+    update_score_display(2, HEIGHT - 2, pad_previous);
+    display_message(0, HEIGHT - 1, "c:");
+    update_score_display(2, HEIGHT - 1, pad_current);
+
     data.frame_counter++;
-    data.joypad_previous = data.joypad_current;
-    data.joypad_current = joypad();
-    keys_pressed = data.joypad_current & ~data.joypad_previous;
 
     switch (data.state) {
       case TITLE:
-        title_state(&data, keys_pressed);
+        title_state(&data);
         break;
       case GAME:
-        data.games[data.current_game_id].game(&data, keys_pressed);
+        data.games[data.current_game_id].game(&data);
         break;
       case GAMEOVER:
-        gameover_state(&data, keys_pressed);
+        gameover_state(&data);
         break;
     }
   }

@@ -1,44 +1,53 @@
 #include "asm_wrapper.h"
 #include "game.h"
+#include "input.h"
 #include <gb/gb.h>
 #include <string.h>
 
 uint8_t scroll_x_val = 0;
+uint8_t draw = 1;
 
-void title_state(GameData* data, uint8_t keys_pressed) {
+void title_state(GameData* data) {
   move_sprite(0, 0, 0);
-  display_middle(2, "CHOOSE A GAME &");
-  display_middle(3, "PRESS START");
-  display_middle(4, "TO PLAY");
-
-  for(uint8_t i = 0; i < data->n_games; i++) {
-    char buff[21] = {0};
-    uint8_t offset = 0;
-    clear_line(i + 6);
-    if (data->current_game_id == i) {
-      strcpy(buff, ">");
-      offset = 1;
-    }
-    strcat(buff, data->games[i].name);
-    display_message(2 - offset, i + 6, buff);
+  if (INPUT_PRESSED(PAD_UP)) {
+    data->current_game_id = data->current_game_id > 0 ? data->current_game_id - 1 : data->n_games - 1;
+    draw = 1;
+  }
+  if (INPUT_PRESSED(PAD_DOWN)) {
+    data->current_game_id = data->current_game_id < data->n_games - 1 ? data->current_game_id + 1 : 0;
+    draw = 1;
   }
 
-  if (keys_pressed & J_START) {
+  if (draw) {
+    display_middle(2, "CHOOSE A GAME &");
+    display_middle(3, "PRESS START");
+
+    for(uint8_t i = 0; i < data->n_games; i++) {
+      char buff[21] = {0};
+      clear_line(i + 6);
+      if (data->current_game_id == i) strcpy(buff, ">");
+      else strcpy(buff, " ");
+      strcat(buff, data->games[i].name);
+      display_message(2, i + 6, buff);
+    }
+    draw = 0;
+  }
+
+  if (INPUT_PRESSED(PAD_START)) {
     clear_window();
+    draw = 1;
     data->state = GAME;
     scroll_x_val = 0;
     data->games[data->current_game_id].init(data);
   }
-  if (keys_pressed & J_UP) data->current_game_id = data->current_game_id > 0 ? data->current_game_id - 1 : data->n_games - 1;
-  if (keys_pressed & J_DOWN) data->current_game_id = data->current_game_id < data->n_games - 1 ? data->current_game_id + 1 : 0;
 }
 
-void gameover_state(GameData* data, uint8_t keys_pressed) {
+void gameover_state(GameData* data) {
   move_sprite(0, 0, 0);
   display_middle(8, "GAME OVER");
   display_middle(10, "PRESS START");
 
-  if (keys_pressed & J_START) {
+  if (INPUT_PRESSED(PAD_START)) {
     clear_window();
     data->state = TITLE;
   }

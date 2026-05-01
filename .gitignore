@@ -2,3 +2,4 @@
 *.map
 *.noi
 compile_commands.json
+*.sav

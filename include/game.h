@@ -11,7 +11,7 @@ typedef enum {
 
 typedef struct GameData GameData;
 
-typedef void (*GameFunction)(GameData*, uint8_t);
+typedef void (*GameFunction)(GameData*);
 
 typedef void (*InitFunction)(GameData*);
 
@@ -32,10 +32,6 @@ struct GameData {
   /* Score */
   uint16_t best_score;
 
-  /* Joypad */
-  uint8_t joypad_current;
-  uint8_t joypad_previous;
-
   /* Engine */
   uint8_t frame_counter;
 
@@ -45,10 +41,10 @@ struct GameData {
   Game* games;
 };
 
-void title_state(GameData* data, uint8_t keys_pressed);
-void gameover_state(GameData* data, uint8_t keys_pressed);
+void title_state(GameData* data);
+void gameover_state(GameData* data);
 
 void test_init(GameData* data);
-void test_game(GameData* data, uint8_t keys_pressed);
+void test_game(GameData* data);
 
 #endif // !GAME_H
