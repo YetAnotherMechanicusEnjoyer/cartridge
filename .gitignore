@@ -3,3 +3,4 @@
 *.noi
 compile_commands.json
 *.sav
+src/autogen

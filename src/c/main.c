@@ -1,18 +1,13 @@
 #include "asm.h"
 #include "asm_wrapper.h"
+#include "background.h"
 #include "font.h"
 #include "game.h"
 #include "gb/gb.h"
 #include "input.h"
+#include "player.h"
 #include "sram.h"
 #include "timers.h"
-
-const unsigned char player_tile[] = {
-  0x5A,0x3C,0xE3,0x42,0x7C,0x99,0xEB,0xA5,
-  0xFB,0xA5,0x66,0x99,0xE7,0x42,0x5A,0x3C
-};
-
-const uint8_t my_map[360] = { 0 };
 
 uint8_t* asm_src;
 uint8_t* asm_dest;
@@ -21,16 +16,19 @@ uint16_t asm_size;
 static void void_init(GameData *data) { data->state = TITLE; }
 
 static void init_game(void) {
-  asm_src = (uint8_t*)my_map;
-  asm_dest = (uint8_t*)VRAM_ADDR;
-  asm_size = 360;
+  set_bkg_data(0, background_TILE_COUNT, background_tiles);
+  set_bkg_tiles(0, 0, background_WIDTH, background_HEIGHT, background_tiles);
 
-  vram_copy();
+  //asm_src = (uint8_t*)background_tiles;
+  //asm_dest = (uint8_t*)VRAM_ADDR;
+  //asm_size = 360;
+
+  //vram_copy();
 
   font_init();
   font_set(font_load(font_ibm));
 
-  set_sprite_data(0, 0, player_tile);
+  set_sprite_data(0, player_TILE_COUNT, player_tiles);
   set_sprite_tile(0, 0);
 
   for(uint16_t i = START_WINDOW_MAP; i < END_WINDOW_MAP; i++) {
@@ -51,10 +49,6 @@ static void init_game(void) {
 
   BGP_REG = 0xE4;
   OBP0_REG = 0xE4;
-
-  //init_oam();
-  //oam[0].tile = 128;
-  //oam[0].flags = 0;
 
   SPRITES_8x8;
   SHOW_SPRITES;
