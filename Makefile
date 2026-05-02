@@ -52,9 +52,9 @@ $(AUTOGEN_DIR)/8x8/%.c: assets/8x8/%.png
 	@echo -e "\x1b[34m[Asset] Converted $< to $@\x1b[0m"
 
 $(CARTRIDGE): $(SRC)
-	@echo -e "\x1b[33m[Compiling] $(SRC)\x1b[0m"
+	@echo -e "\x1b[33m[Compiling] $@...\x1b[0m"
 	@$(CC) $(CFLAGS) -o $@ $(SRC)
-	@echo -e "\x1b[32m[OK] Cartridge $@ compiled\x1b[0m"
+	@echo -e "\x1b[32m[OK] $@ compiled\x1b[0m"
 
 clean:
 	@rm -f *.o *.lst *.map *.gb *.ihx *.sym *.cdb *.adb *.asm *.noi
@@ -66,3 +66,5 @@ fclean: clean
 	@echo -e "\x1b[35m[Fclean] Cartridge removed\x1b[0m"
 
 re: fclean all
+
+.PHONY: all clean fclean re
