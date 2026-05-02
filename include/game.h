@@ -21,6 +21,12 @@ typedef struct {
   InitFunction init;
 } Game;
 
+typedef struct {
+  uint8_t save_initialized;
+  uint16_t high_score;
+} SaveData;
+
+
 struct GameData {
   /* State */
   GameState state;
@@ -30,7 +36,7 @@ struct GameData {
   uint8_t player_y;
 
   /* Score */
-  uint16_t best_score;
+  uint16_t score;
 
   /* Engine */
   uint8_t frame_counter;
@@ -38,7 +44,10 @@ struct GameData {
   /* Games */
   uint8_t current_game_id;
   uint8_t n_games;
-  Game* games;
+
+  /* Save */
+  SaveData current_save;
+  const Game* games;
 };
 
 void title_state(GameData* data);

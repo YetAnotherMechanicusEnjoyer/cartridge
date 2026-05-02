@@ -1,9 +1,6 @@
 #ifndef INPUT_H
 #define INPUT_H
 
-#include "asm.h"
-#include "asm_wrapper.h"
-#include <stdbool.h>
 #include <stdint.h>
 
 #define PAD_DOWN   0x80
@@ -21,10 +18,8 @@ extern uint8_t pad_pressed;
 extern uint8_t pad_released;
 extern void input_update(void);
 
-#define INPUT_HELD(button)     (pad_current & (button))
-
-#define INPUT_PRESSED(button)  (pad_pressed & (button))
-
+#define INPUT_HELD(button) (pad_current & (button))
+#define INPUT_PRESSED(button) (pad_pressed & (button))
 #define INPUT_RELEASED(button) (pad_released & (button))
 
 #endif // !INPUT_H

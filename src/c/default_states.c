@@ -24,10 +24,10 @@ void title_state(GameData* data) {
 
     for(uint8_t i = 0; i < data->n_games; i++) {
       char buff[21] = {0};
-      clear_line(i + 6);
       if (data->current_game_id == i) strcpy(buff, ">");
       else strcpy(buff, " ");
       strcat(buff, data->games[i].name);
+      clear_line(i + 6);
       display_message(2, i + 6, buff);
     }
     draw = 0;

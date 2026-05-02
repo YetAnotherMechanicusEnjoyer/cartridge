@@ -1,12 +1,15 @@
 #include "asm.h"
+#include "asm_wrapper.h"
 #include "font.h"
 #include "game.h"
+#include "gb/gb.h"
 #include "input.h"
+#include "sram.h"
 #include "timers.h"
 
 const unsigned char player_tile[] = {
-  0xFF,0xFF, 0x81,0x81, 0x81,0x81, 0x99, 0x99,
-  0x99,0x99, 0x81, 0x81, 0x81, 0x81, 0xFF, 0xFF
+  0x5A,0x3C,0xE3,0x42,0x7C,0x99,0xEB,0xA5,
+  0xFB,0xA5,0x66,0x99,0xE7,0x42,0x5A,0x3C
 };
 
 const uint8_t my_map[360] = { 0 };
@@ -24,11 +27,11 @@ static void init_game(void) {
 
   vram_copy();
 
-  set_sprite_data(0, 1, player_tile);
-  set_sprite_tile(0, 0);
-
   font_init();
   font_set(font_load(font_ibm));
+
+  set_sprite_data(0, 0, player_tile);
+  set_sprite_tile(0, 0);
 
   for(uint16_t i = START_WINDOW_MAP; i < END_WINDOW_MAP; i++) {
     while(STAT_REG & 0x02);
@@ -46,11 +49,26 @@ static void init_game(void) {
   }
   set_interrupts(VBL_IFLAG | LCD_IFLAG);
 
+  BGP_REG = 0xE4;
+  OBP0_REG = 0xE4;
+
+  //init_oam();
+  //oam[0].tile = 128;
+  //oam[0].flags = 0;
+
   SPRITES_8x8;
   SHOW_SPRITES;
   SHOW_BKG;
   SHOW_WIN;
   DISPLAY_ON;
+}
+
+void update(GameData* data) {
+  vsync();
+  timers_update();
+  input_update();
+
+  data->frame_counter++;
 }
 
 int main(void) {
@@ -63,11 +81,24 @@ int main(void) {
 
   uint8_t len = sizeof(registry) / sizeof(registry[0]);
 
+  SaveData current_save = {
+    .save_initialized=0,
+    .high_score=0,
+  };
+
+  sram_read(0, (uint8_t*)&current_save, sizeof(SaveData));
+
+  if (current_save.save_initialized != SAVE_INITIALIZED) {
+    current_save.save_initialized = SAVE_INITIALIZED;
+    sram_write(0, (uint8_t*)&current_save, sizeof(SaveData));
+  }
+
   GameData data = {
     .state=TITLE,
     .player_x=80,
     .player_y=72,
-    .best_score=0,
+    .score=0,
+    .current_save=current_save,
     .frame_counter=0,
     .current_game_id=0,
     .n_games=len,
@@ -77,16 +108,11 @@ int main(void) {
   init_game();
 
   while(1) {
-    vsync();
-    timers_update();
-    input_update();
-
-    display_message(0, HEIGHT - 2, "p:");
-    update_score_display(2, HEIGHT - 2, pad_previous);
-    display_message(0, HEIGHT - 1, "c:");
-    update_score_display(2, HEIGHT - 1, pad_current);
-
-    data.frame_counter++;
+    update(&data);
+    if (data.frame_counter % 10 == 0) {
+      display_message(0, HEIGHT - 1, "c:");
+      update_score_display(2, HEIGHT - 1, pad_current);
+    }
 
     switch (data.state) {
       case TITLE:
