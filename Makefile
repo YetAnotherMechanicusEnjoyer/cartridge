@@ -1,55 +1,41 @@
 CC			=	lcc
-CFLAGS	=	-Iinclude -Isrc/autogen -Isrc/autogen/8x8 -Wa-l -Wl-m -Wl-j -Wl-yt0x1B -Wl-ya4
-
 CARTRIDGE	=	CARTRIDGE.gb
 
-ASM_FILES	=	dma.asm			\
-						engine.asm	\
-						input.asm		\
-						sram.asm		\
-						text.asm		\
-						timer.asm		\
-						utoa.asm		\
-						vram.asm
-
-C_FILES		=	asm_wrapper.c			\
-						default_states.c	\
-						main.c						\
-						oam.c							\
-						test.c
-
 PNG2ASSET	=	png2asset
-
 AUTOGEN_DIR	=	src/autogen
 
-ASSETS_PNG	=	$(wildcard assets/*.png)
-ASSETS_C		=	$(patsubst assets/%.png, $(AUTOGEN_DIR)/%.c, $(ASSETS_PNG))
+AUTOGEN_DIRS	:=	$(shell find $(AUTOGEN_DIR) -type d 2>/dev/null)
+INC_DIRS 			:= include $(AUTOGEN_DIRS)
+CFLAGS				:=	$(addprefix -I,$(INC_DIRS)) -Wa-l -Wl-m -Wl-j -Wl-yt0x1B -Wl-ya4
 
-ASSETS_8_PNG	=	$(wildcard assets/8x8/*.png)
-ASSETS_8_C		=	$(patsubst assets/8x8/%.png, $(AUTOGEN_DIR)/8x8/%.c, $(ASSETS_8_PNG))
+ASSETS_PNG	:=	$(shell find assets -name "*.png")
+AUTOGEN_C		:= $(patsubst assets/%.png, $(AUTOGEN_DIR)/%.c, $(ASSETS_PNG))
 
-SRC	=	$(addprefix src/asm/, $(ASM_FILES))	\
-			$(addprefix src/c/, $(C_FILES))			\
-			$(ASSETS_C)													\
-			$(ASSETS_8_C)
+ASM_FILES	:=	$(wildcard src/asm/*.asm)
+C_FILES		:=	$(wildcard src/c/*.c) $(AUTOGEN_C)
 
-all: $(AUTOGEN_DIR) $(CARTRIDGE)
+SRC	=	$(ASM_FILES) $(C_FILES)
 
-$(AUTOGEN_DIR):
+all: $(AUTOGEN_DIRS) $(CARTRIDGE)
+
+$(AUTOGEN_DIRS):
 	@mkdir -p $@
-	@echo -e "\x1b[36m[Mkdir] $@ directory created\x1b[0m"
-	@mkdir -p $@/8x8
-	@echo -e "\x1b[36m[Mkdir] $@/8x8 directory created\x1b[0m"
+	@echo -e "\x1b[36m[Autogen] Directory: $@\x1b[0m"
 
 $(AUTOGEN_DIR)/%.c: assets/%.png
-	@printf "\x1b[34m"
+	@printf "\x1b[31m"
 	@$(PNG2ASSET) $< -c $@
-	@echo -e "\x1b[34m[Asset] Converted $< to $@\x1b[0m"
+	@echo -e "\x1b[34m[Autogen] Default: $@\x1b[0m"
 
 $(AUTOGEN_DIR)/8x8/%.c: assets/8x8/%.png
 	@printf "\x1b[31m"
-	@$(PNG2ASSET) $< -c $@ -spr8x8
-	@echo -e "\x1b[34m[Asset] Converted $< to $@\x1b[0m"
+	@$(PNG2ASSET) $< -c $@ -spr8x8 -keep_duplicate_tiles
+	@echo -e "\x1b[34m[Autogen] Sprite: $@\x1b[0m"
+
+$(AUTOGEN_DIR)/map/%.c: assets/map/%.png
+	@printf "\x1b[31m"
+	@$(PNG2ASSET) $< -c $@ -map -noflip
+	@echo -e "\x1b[34m[Autogen] Map: $@\x1b[0m"
 
 $(CARTRIDGE): $(SRC)
 	@echo -e "\x1b[33m[Compiling] $@...\x1b[0m"

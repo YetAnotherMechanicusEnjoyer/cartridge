@@ -11,6 +11,7 @@ void test_init(GameData* data) {
   data->player_x = 80;
   data->player_y = 72;
   data->score = 0;
+  move_win(7, 144);
   display_message(0, 0, "SCORE:");
   update_score_display(6, 0, data->current_save.high_score);
 }
@@ -23,6 +24,7 @@ void test_game(GameData* data) {
 
 
   if (check_timer(TIMER_INVICIBLE)) {
+    move_win(7, 144);
     clear_message(17, 0, 3);
     clear_line(1);
   }
@@ -36,6 +38,7 @@ void test_game(GameData* data) {
         return;
       }
       data->score = new_score;
+      move_win(7, 112);
       update_score_display(6, 0, data->score);
       display_message(17, 0, "...");
     } else {
@@ -46,11 +49,12 @@ void test_game(GameData* data) {
   move_sprite(0, data->player_x, data->player_y);
 
   if (INPUT_RELEASED(PAD_SELECT)) {
-    clear_message(0, 1, 11);
+    clear_window();
     if (data->current_save.high_score < data->score) {
       data->current_save.high_score = data->score;
       sram_write(0, (uint8_t*)&data->current_save, sizeof(SaveData));
     }
+    move_win(7, 0);
     data->state = GAMEOVER;
   }
 }

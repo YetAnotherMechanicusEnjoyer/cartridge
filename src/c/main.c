@@ -13,20 +13,22 @@ uint8_t* asm_src;
 uint8_t* asm_dest;
 uint16_t asm_size;
 
+#define BKG_TILES_OFFSET 128
+
 static void void_init(GameData *data) { data->state = TITLE; }
 
 static void init_game(void) {
-  set_bkg_data(0, background_TILE_COUNT, background_tiles);
-  set_bkg_tiles(0, 0, background_WIDTH, background_HEIGHT, background_tiles);
+  font_init();
+  font_set(font_load(font_ibm));
+
+  set_bkg_data(BKG_TILES_OFFSET, background_TILE_COUNT, background_tiles);
+  set_bkg_based_tiles(0, 0, background_WIDTH / 8, background_HEIGHT / 8, background_map, BKG_TILES_OFFSET);
 
   //asm_src = (uint8_t*)background_tiles;
   //asm_dest = (uint8_t*)VRAM_ADDR;
   //asm_size = 360;
 
   //vram_copy();
-
-  font_init();
-  font_set(font_load(font_ibm));
 
   set_sprite_data(0, player_TILE_COUNT, player_tiles);
   set_sprite_tile(0, 0);
@@ -37,7 +39,6 @@ static void init_game(void) {
   }
 
   init_window_layer();
-  move_win(7, 0);
 
   STAT_REG |= STATF_LYC;
   LYC_REG = 64;
@@ -104,12 +105,14 @@ int main(void) {
   while(1) {
     update(&data);
     if (data.frame_counter % 10 == 0) {
-      display_message(0, HEIGHT - 1, "c:");
-      update_score_display(2, HEIGHT - 1, pad_current);
+      uint8_t height = data.state == GAME ? 2 : HEIGHT - 1;
+      display_message(0, height, "c:");
+      update_score_display(2, height, pad_current);
     }
 
     switch (data.state) {
       case TITLE:
+        move_win(7, 0);
         title_state(&data);
         break;
       case GAME:
