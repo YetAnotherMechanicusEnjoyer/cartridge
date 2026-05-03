@@ -11,10 +11,15 @@
 
 #define VRAM_ADDR 0x9800
 
-
 /*
   === FUNCTIONS ===
 */
+
+/* collision */
+extern uint8_t col_x;
+extern uint8_t col_y;
+
+extern uint8_t check_collision(void);
 
 /* engine */
 extern void init_window_layer(void);

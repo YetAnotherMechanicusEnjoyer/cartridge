@@ -7,9 +7,12 @@
 
 #define TIMER_INVICIBLE 0
 
+uint8_t col_x = 0;
+uint8_t col_y = 0;
+
 void test_init(GameData* data) {
-  data->player_x = 80;
-  data->player_y = 72;
+  data->player_x = 25;
+  data->player_y = 20;
   data->score = 0;
   move_win(7, 144);
   display_message(0, 0, "SCORE:");
@@ -17,11 +20,21 @@ void test_init(GameData* data) {
 }
 
 void test_game(GameData* data) {
-  if (INPUT_HELD(PAD_UP) && data->player_y > 16) data->player_y -= 1;
-  if (INPUT_HELD(PAD_DOWN) && data->player_y < 152) data->player_y += 1;
-  if (INPUT_HELD(PAD_LEFT) && data->player_x > 8) data->player_x -= 1;
-  if (INPUT_HELD(PAD_RIGHT) && data->player_x < 160) data->player_x += 1;
+  uint8_t next_x = data->player_x;
+  uint8_t next_y = data->player_y;
 
+  if (INPUT_HELD(PAD_UP) && data->player_y > 16) next_y -= 1;
+  if (INPUT_HELD(PAD_DOWN) && data->player_y < 152) next_y += 1;
+  if (INPUT_HELD(PAD_LEFT) && data->player_x > 8) next_x -= 1;
+  if (INPUT_HELD(PAD_RIGHT) && data->player_x < 160) next_x += 1;
+
+  col_x = next_x;
+  col_y = next_y;
+
+  if (check_collision() == 0) {
+    data->player_x = next_x;
+    data->player_y = next_y;
+  }
 
   if (check_timer(TIMER_INVICIBLE)) {
     move_win(7, 144);
