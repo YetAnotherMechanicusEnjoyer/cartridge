@@ -11,18 +11,14 @@ _get_hitbox_value:
   srl a
   srl a
   srl a
-  ld c, a
-  ld b, #0
+  ld l, a
+  ld h, #0
 
-  ld l, c
-  ld h, b
   add hl, hl
   add hl, hl
-  ld e, l
-  ld d, h
   add hl, hl
   add hl, hl
-  add hl, de
+  add hl, hl
 
   ld a, (#_hitbox_x)
   srl a
@@ -36,5 +32,6 @@ _get_hitbox_value:
   ld de, #_collision_map
   add hl, de
   ld a, (hl)
+
   ld e, a
   ret

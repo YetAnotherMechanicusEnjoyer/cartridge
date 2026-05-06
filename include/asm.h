@@ -25,6 +25,18 @@ extern uint8_t check_collision(void);
 extern void init_window_layer(void);
 extern void lcd_isr(void);
 
+/* hitbox */
+extern uint8_t hitbox_x;
+extern uint8_t hitbox_y;
+
+extern uint8_t get_hitbox_value(void);
+
+/* scroll */
+extern uint8_t scroll_x;
+extern uint8_t scroll_y;
+
+extern void apply_scroll(void);
+
 /* sram */
 extern void save_score(uint16_t score);
 extern uint16_t load_score(void);

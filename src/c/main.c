@@ -46,7 +46,7 @@ static void init_game(void) {
   CRITICAL {
     add_LCD(lcd_isr);
   }
-  set_interrupts(VBL_IFLAG | LCD_IFLAG);
+  set_interrupts(VBL_IFLAG);
 
   BGP_REG = 0xE4;
   OBP0_REG = 0xE4;
