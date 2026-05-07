@@ -9,6 +9,9 @@ char *text_ptr;
 
 uint16_t text_val;
 
+uint8_t hitbox_x;
+uint8_t hitbox_y;
+
 static uint8_t getlen(const char* str) {
     uint8_t i = 0;
 
@@ -61,4 +64,11 @@ void update_score_display(uint8_t x, uint8_t y, uint16_t val) {
   text_ptr = buf;
   utoa();
   display_message(x, y, buf);
+}
+
+uint8_t get_collision_at(uint8_t x, uint8_t y) {
+  hitbox_x = x;
+  hitbox_y = y;
+
+  return get_hitbox_value();
 }

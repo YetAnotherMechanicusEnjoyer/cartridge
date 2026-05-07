@@ -5,7 +5,7 @@
 
 DialogManager dm;
 
-void clear_dialog_area() {
+void clear_dialog_area(void) {
   for (uint8_t i = 1; i < 3; i++) {
     clear_message(1, i, 18);
   }
@@ -25,7 +25,7 @@ void dialog_start(const char* text) {
   clear_dialog_area();
 }
 
-void dialog_update() {
+void dialog_update(void) {
   if (dm.state == D_IDLE) return;
 
   if (dm.state == D_WAITING_INPUT && INPUT_PRESSED(PAD_A)) {
@@ -84,6 +84,6 @@ void dialog_update() {
   }
 }
 
-uint8_t dialog_is_active() {
+uint8_t dialog_is_active(void) {
   return dm.state != D_IDLE;
 }

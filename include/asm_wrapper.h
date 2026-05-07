@@ -12,4 +12,6 @@ void clear_window(void);
 
 void update_score_display(uint8_t x, uint8_t y, uint16_t val);
 
+uint8_t get_collision_at(uint8_t x, uint8_t y);
+
 #endif // !ASM_WRAPPER_H

@@ -1,11 +1,10 @@
 #include "asm.h"
 #include "asm_wrapper.h"
-#include "background.h"
+#include "sprites.h"
 #include "font.h"
 #include "game.h"
 #include "gb/gb.h"
 #include "input.h"
-#include "player.h"
 #include "sram.h"
 #include "timers.h"
 
@@ -32,6 +31,8 @@ static void init_game(void) {
 
   set_sprite_data(0, player_TILE_COUNT, player_tiles);
   set_sprite_tile(0, 0);
+
+  set_sprite_data(4, npc1_TILE_COUNT, npc1_tiles);
 
   for(uint16_t i = START_WINDOW_MAP; i < END_WINDOW_MAP; i++) {
     while(STAT_REG & 0x02);

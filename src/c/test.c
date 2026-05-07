@@ -1,6 +1,7 @@
 #include "asm.h"
 #include "asm_wrapper.h"
 #include "dialog.h"
+#include "npc.h"
 #include "game.h"
 #include "gb/gb.h"
 #include "input.h"
@@ -15,8 +16,6 @@
 
 uint8_t col_x = 0;
 uint8_t col_y = 0;
-uint8_t hitbox_x = 0;
-uint8_t hitbox_y = 0;
 uint8_t scroll_x = 0;
 uint8_t scroll_y = 0;
 
@@ -59,6 +58,15 @@ void test_init(GameData* data) {
   data->player_x = 25;
   data->player_y = 20;
   data->score = 0;
+  npcs_init();
+
+  npcs[0].x = 80;
+  npcs[0].y = 60;
+  npcs[0].sprite_id = 4;
+  npcs[0].active = 1;
+  npcs[0].moving = 0;
+  npcs[0].wait_timer = 30;
+
   move_win(7, 144);
   /*
   display_message(0, 0, "SCORE:");
@@ -75,10 +83,7 @@ static void test_movement(GameData* data) {
   if (INPUT_HELD(PAD_LEFT) && data->player_x > 0) next_x -= 1;
   if (INPUT_HELD(PAD_RIGHT) && data->player_x < 255) next_x += 1;
 
-  hitbox_x = next_x + FEET_OFFSET_X;
-  hitbox_y = next_y + FEET_OFFSET_Y;
-
-  uint8_t terrain_type = get_hitbox_value();
+  uint8_t terrain_type = get_collision_at(next_x + FEET_OFFSET_X, next_y + FEET_OFFSET_Y);
 
   if (terrain_type != 1) {
     data->player_x = next_x;
@@ -104,6 +109,9 @@ static void test_movement(GameData* data) {
   uint8_t sprite_y = (data->player_y - scroll_y) + 16;
 
   move_sprite(0, sprite_x, sprite_y);
+  set_sprite_tile(0, 0);
+
+  npcs_render(data->player_x, data->player_y, scroll_x, scroll_y);
 }
 
 static void test_events(GameData* data) {
@@ -157,4 +165,13 @@ void test_game(GameData* data) {
   }
   */
   test_events(data);
+
+  for (uint8_t i = 0; i < MAX_NPC; i++) {
+    npc_process_logic(&npcs[i]);
+
+    if (npcs[i].active) {
+      move_sprite(i + 1, (npcs[i].x - scroll_x) + 8, (npcs[i].y - scroll_y) + 16);
+      set_sprite_tile(i + 1, npcs[i].sprite_id);
+    }
+  }
 }
