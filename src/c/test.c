@@ -1,5 +1,6 @@
 #include "asm.h"
 #include "asm_wrapper.h"
+#include "dialog.h"
 #include "game.h"
 #include "gb/gb.h"
 #include "input.h"
@@ -59,11 +60,13 @@ void test_init(GameData* data) {
   data->player_y = 20;
   data->score = 0;
   move_win(7, 144);
+  /*
   display_message(0, 0, "SCORE:");
   update_score_display(6, 0, data->current_save.high_score);
+  */
 }
 
-void test_game(GameData* data) {
+static void test_movement(GameData* data) {
   uint8_t next_x = data->player_x;
   uint8_t next_y = data->player_y;
 
@@ -101,13 +104,21 @@ void test_game(GameData* data) {
   uint8_t sprite_y = (data->player_y - scroll_y) + 16;
 
   move_sprite(0, sprite_x, sprite_y);
+}
 
-  if (check_timer(TIMER_INVICIBLE)) {
-    move_win(7, 144);
-    clear_message(17, 0, 3);
-    clear_line(1);
+static void test_events(GameData* data) {
+  if (dialog_is_active()) {
+    dialog_update();
+    return;
   }
 
+  test_movement(data);
+
+  if (INPUT_PRESSED(PAD_B)) {
+    dialog_start("Hi strange player! Do what you want, just don't bother me. I'm heading back to work... again...");
+  }
+
+  /*
   if (INPUT_PRESSED(PAD_A)) {
     if (timer_counters[TIMER_INVICIBLE] == 0) {
       set_timer(TIMER_INVICIBLE, 60);
@@ -124,6 +135,7 @@ void test_game(GameData* data) {
       display_message(0, 1, "/!\\ Wait /!\\");
     }
   }
+  */
 
   if (INPUT_RELEASED(PAD_SELECT)) {
     clear_window();
@@ -134,4 +146,15 @@ void test_game(GameData* data) {
     move_win(7, 0);
     data->state = GAMEOVER;
   }
+}
+
+void test_game(GameData* data) {
+  /*
+  if (check_timer(TIMER_INVICIBLE)) {
+    move_win(7, 144);
+    clear_message(17, 0, 3);
+    clear_line(1);
+  }
+  */
+  test_events(data);
 }

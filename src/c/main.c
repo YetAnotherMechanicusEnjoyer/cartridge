@@ -104,11 +104,13 @@ int main(void) {
 
   while(1) {
     update(&data);
+    /*
     if (data.frame_counter % 10 == 0) {
       uint8_t height = data.state == GAME ? 2 : HEIGHT - 1;
       display_message(0, height, "c:");
       update_score_display(2, height, pad_current);
     }
+    */
 
     switch (data.state) {
       case TITLE:
