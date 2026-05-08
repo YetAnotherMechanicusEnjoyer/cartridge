@@ -1,5 +1,6 @@
 #include "asm.h"
 #include "asm_wrapper.h"
+#include "battle.h"
 #include "sprites.h"
 #include "font.h"
 #include "game.h"
@@ -14,14 +15,20 @@ uint16_t asm_size;
 
 #define BKG_TILES_OFFSET 128
 
+void restore_overworld(void) {
+  set_bkg_data(BKG_TILES_OFFSET, background_TILE_COUNT, background_tiles);
+  set_bkg_based_tiles(0, 0, background_WIDTH / 8, background_HEIGHT / 8, background_map, BKG_TILES_OFFSET);
+
+  SHOW_SPRITES;
+}
+
 static void void_init(GameData *data) { data->state = TITLE; }
 
 static void init_game(void) {
   font_init();
   font_set(font_load(font_ibm));
 
-  set_bkg_data(BKG_TILES_OFFSET, background_TILE_COUNT, background_tiles);
-  set_bkg_based_tiles(0, 0, background_WIDTH / 8, background_HEIGHT / 8, background_map, BKG_TILES_OFFSET);
+  restore_overworld();
 
   //asm_src = (uint8_t*)background_tiles;
   //asm_dest = (uint8_t*)VRAM_ADDR;
@@ -53,7 +60,6 @@ static void init_game(void) {
   OBP0_REG = 0xE4;
 
   SPRITES_8x8;
-  SHOW_SPRITES;
   SHOW_BKG;
   SHOW_WIN;
   DISPLAY_ON;
@@ -115,13 +121,19 @@ int main(void) {
 
     switch (data.state) {
       case TITLE:
+        HIDE_SPRITES;
         move_win(7, 0);
         title_state(&data);
         break;
       case GAME:
+        SHOW_SPRITES;
         data.games[data.current_game_id].game(&data);
         break;
+      case BATTLE:
+        battle_update(&data);
+        break;
       case GAMEOVER:
+        HIDE_SPRITES;
         gameover_state(&data);
         break;
     }

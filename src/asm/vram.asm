@@ -45,3 +45,16 @@ wait_stat:
   jr nz, copy_loop
 
   ret
+
+_clear_window_asm:
+  ld hl, #0x9C00
+  ld bc, #80
+  ld a, #0x00
+_clear_loop:
+  ld (hl+), a
+  dec bc
+  ld a, b
+  or c
+  ld a, #0x00
+  jr nz, _clear_loop
+  ret

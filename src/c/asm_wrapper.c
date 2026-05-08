@@ -1,3 +1,4 @@
+#include "asm_wrapper.h"
 #include "asm.h"
 #include <stdint.h>
 
@@ -38,6 +39,26 @@ void display_middle(uint8_t y, char *str) {
   draw_string();
 }
 
+void display_message_bg(uint8_t x, uint8_t y, char *str) {
+  uint8_t len = getlen(str);
+  if (len == 0 || len > 20) return;
+
+  uint8_t tiles[20];
+
+  for (uint8_t i = 0; i < len; i++) {
+    tiles[i] = str[i] - 32;
+  }
+
+  set_bkg_tiles(x, y, len, 1, tiles);
+}
+
+void draw_menu_border_win(void) {
+  display_message(0, 0, "+------------------+");
+  display_message(0, 1, "+                  +");
+  display_message(0, 2, "+                  +");
+  display_message(0, 3, "+------------------+");
+}
+
 void clear_message(uint8_t x, uint8_t y, uint8_t len) {
   text_x = x;
   text_y = y;
@@ -55,6 +76,12 @@ void clear_line(uint8_t y) {
 void clear_window(void) {
   for(uint8_t y = 0; y < HEIGHT; y++) {
     clear_message(0, y, WIDTH);
+  }
+}
+
+void clear_message_win(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+  for (uint8_t i = 0; i < h; i++) {
+    clear_message(x, y + i, w);
   }
 }
 
