@@ -5,6 +5,18 @@
 
 DialogManager dm;
 
+void setup_next_message(void) {
+  dm.current_text = dm.queue[dm.q_read];
+  dm.char_ptr = 0;
+  dm.x = 1;
+  dm.y = 1;
+  dm.state = D_TYPING;
+  clear_dialog_area();
+  display_message(0, 0, "/==================\\");
+  display_message(0, 3, "\\==================/");
+  move_win(7, 112);
+}
+
 void clear_dialog_area(void) {
   for (uint8_t i = 1; i < 3; i++) {
     clear_message(1, i, 18);
@@ -12,17 +24,15 @@ void clear_dialog_area(void) {
 }
 
 void dialog_start(const char* text) {
-  dm.current_text = text;
-  dm.char_ptr = 0;
-  dm.x = 1;
-  dm.y = 1;
-  dm.timer = 0;
-  dm.state = D_TYPING;
+  if (((dm.q_write + 1) % DIALOG_QUEUE_SIZE) == dm.q_read) return;
 
-  display_message(0, 0, "/==================\\");
-  display_message(0, 3, "\\==================/");
-  move_win(7, 112);
-  clear_dialog_area();
+  dm.queue[dm.q_write] = text;
+
+  if (dm.state == D_IDLE) {
+    setup_next_message();
+  }
+
+  dm.q_write = (dm.q_write + 1) % DIALOG_QUEUE_SIZE;
 }
 
 void dialog_update(void) {
@@ -79,8 +89,14 @@ void dialog_update(void) {
   }
 
   if (dm.state == D_DONE && INPUT_PRESSED(PAD_A)) {
-    move_win(7, 144);
-    dm.state = D_IDLE;
+    dm.q_read = (dm.q_read + 1) % DIALOG_QUEUE_SIZE;
+
+    if (dm.q_read != dm.q_write) {
+      setup_next_message();
+    } else {
+      move_win(7, 144);
+      dm.state = D_IDLE;
+    }
   }
 }
 

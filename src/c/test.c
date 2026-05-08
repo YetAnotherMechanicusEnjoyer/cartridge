@@ -51,7 +51,7 @@ const uint8_t collision_map[1024] = {
     1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
 };
 
 void test_init(GameData* data) {
@@ -123,7 +123,11 @@ static void test_events(GameData* data) {
   test_movement(data);
 
   if (INPUT_PRESSED(PAD_B)) {
-    dialog_start("Hi strange player! Do what you want, just don't bother me. I'm heading back to work... again...");
+    dialog_start("Hi strange player!");
+    dialog_start("Do what you want, just don't bother me.");
+    dialog_start("I'm heading back to work... again...");
+    dialog_start("Wait I forgot, it's not licensed by Nintendo hihi");
+    dialog_start("Cya !");
   }
 
   /*

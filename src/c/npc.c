@@ -44,17 +44,17 @@ void npc_process_logic(NPC* n) {
     uint8_t distance = ((DIV_REG & 0x03) + 1) * 8;
 
     switch (n->direction) {
-      case 0:
-        next_y += distance;
-        break;
-      case 1:
-        next_y -= distance;
+      case 3:
+        next_x += distance;
         break;
       case 2:
         next_x -= distance;
         break;
-      case 3:
-        next_x += distance;
+      case 1:
+        next_y -= distance;
+        break;
+      case 0:
+        next_y += distance;
         break;
     }
 

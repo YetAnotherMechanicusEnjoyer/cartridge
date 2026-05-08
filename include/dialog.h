@@ -5,6 +5,7 @@
 
 #define DIALOG_MAX_WIDTH 18
 #define DIALOG_MAX_LINES 2
+#define DIALOG_QUEUE_SIZE 8
 #define TYPE_SPEED 3
 
 typedef enum {
@@ -20,6 +21,9 @@ typedef struct {
   uint8_t x, y;
   uint8_t timer;
   DialogState state;
+  const char* queue[DIALOG_QUEUE_SIZE];
+  uint8_t q_read;
+  uint8_t q_write;
 } DialogManager;
 
 void dialog_start(const char* text);
