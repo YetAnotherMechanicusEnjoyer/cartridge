@@ -1,6 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "battle.h"
 #include <stdint.h>
 
 typedef enum {
@@ -25,6 +26,7 @@ typedef struct {
 typedef struct {
   uint8_t save_initialized;
   uint16_t high_score;
+  BattleEntity player_bentity;
 } SaveData;
 
 
@@ -52,6 +54,8 @@ struct GameData {
 };
 
 void title_state(GameData* data);
+
+void gameover_init(GameData* data);
 void gameover_state(GameData* data);
 
 void test_init(GameData* data);

@@ -1,7 +1,6 @@
 #ifndef BATTLE_H
 #define BATTLE_H
 
-#include "game.h"
 #include <stdint.h>
 
 typedef enum {
@@ -26,7 +25,7 @@ typedef struct {
   MoveEffect effect;
 } Move;
 
-typedef struct {
+typedef struct BattleEntity {
   char name[12];
   uint8_t level;
   uint16_t hp;
@@ -34,6 +33,7 @@ typedef struct {
   uint8_t attack;
   uint8_t defense;
   uint8_t speed;
+  uint16_t xp;
   Type type1;
   Type type2;
   Move moves[4];
@@ -71,8 +71,5 @@ typedef struct {
   uint8_t enemy_move_idx;
   uint8_t is_player_faster;
 } BattleManager;
-
-void battle_init(GameData* data, BattleEntity* p, BattleEntity* o);
-void battle_update(GameData* data);
 
 #endif /* BATTLE_H */

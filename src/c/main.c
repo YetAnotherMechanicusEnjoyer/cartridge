@@ -1,6 +1,8 @@
 #include "asm.h"
 #include "asm_wrapper.h"
 #include "battle.h"
+#include "battle_func.h"
+#include "dialog.h"
 #include "sprites.h"
 #include "font.h"
 #include "game.h"
@@ -86,6 +88,24 @@ int main(void) {
   SaveData current_save = {
     .save_initialized=0,
     .high_score=0,
+    .player_bentity={
+      .name="Charmander",
+      .level=5,
+      .xp=0,
+      .hp=20,
+      .max_hp=20,
+      .attack=10,
+      .defense=8,
+      .speed=10,
+      .type1=T_FIRE,
+      .type2=T_NORMAL,
+      .moves={
+        { .name="TACKLE", .power=40, .type=T_NORMAL, .effect=EFF_DAMAGE },
+        { .name="EMBER", .power=40, .type=T_FIRE, .effect=EFF_DAMAGE },
+        { .name="TAIL WHIP", .power=0, .type=T_NORMAL, .effect=EFF_DEFENSE_DOWN },
+        { .name="SCRATCH", .power=40, .type=T_NORMAL, .effect=EFF_DAMAGE },
+      }
+    }
   };
 
   sram_read(0, (uint8_t*)&current_save, sizeof(SaveData));
@@ -118,6 +138,11 @@ int main(void) {
       update_score_display(2, height, pad_current);
     }
     */
+    if (dialog_is_active()) {
+      dialog_update();
+      continue;
+    }
+
 
     switch (data.state) {
       case TITLE:

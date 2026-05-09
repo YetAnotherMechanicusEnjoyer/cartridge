@@ -1,6 +1,7 @@
 #include "asm.h"
 #include "asm_wrapper.h"
 #include "battle.h"
+#include "battle_func.h"
 #include "dialog.h"
 #include "npc.h"
 #include "game.h"
@@ -24,9 +25,9 @@ uint8_t col_y = 0;
 uint8_t scroll_x = 0;
 uint8_t scroll_y = 0;
 
-BattleEntity player_stats = {
+BattleEntity charmander_stats = {
   "Charmander", 5, 20, 20,
-  10, 10, 15,
+  10, 10, 15, 0,
   T_FIRE, T_NORMAL,
   {
     { "TACKLE", 40, T_NORMAL, EFF_DAMAGE },
@@ -36,9 +37,9 @@ BattleEntity player_stats = {
   }
 };
 
-BattleEntity npc_stats = {
+BattleEntity bulbasaur_stats = {
   "Bulbasaur", 5, 20, 20,
-  9, 9, 13,
+  9, 9, 13, 0,
   T_GRASS, T_NORMAL,
   {
     { "TACKLE", 40, T_NORMAL, EFF_DAMAGE },
@@ -123,7 +124,7 @@ static void test_movement(GameData* data) {
     case TALL_GRASS:
       if ((DIV_REG & 0xFF) < 5) {
         fade_out_black();
-        battle_init(data, &player_stats, &npc_stats);
+        battle_init(data, &data->current_save.player_bentity, &bulbasaur_stats);
         fade_in_black();
         return;
       }
@@ -189,12 +190,11 @@ static void test_events(GameData* data) {
   */
 
   if (INPUT_RELEASED(PAD_SELECT)) {
-    clear_window();
     if (data->current_save.high_score < data->score) {
       data->current_save.high_score = data->score;
       sram_write(0, (uint8_t*)&data->current_save, sizeof(SaveData));
     }
-    move_win(7, 0);
+    gameover_init(data);
     data->state = GAMEOVER;
   }
 }
@@ -208,6 +208,14 @@ void test_game(GameData* data) {
   }
   */
   test_events(data);
+
+  if (data->current_save.player_bentity.hp == 0) {
+    data->current_save.player_bentity.hp = data->current_save.player_bentity.max_hp;
+    data->current_save.save_initialized = SAVE_INITIALIZED;
+    sram_write(0, (uint8_t*)&data->current_save, sizeof(SaveData));
+    gameover_init(data);
+    data->state = GAMEOVER;
+  }
 
   for (uint8_t i = 0; i < MAX_NPC; i++) {
     npc_process_logic(&npcs[i]);

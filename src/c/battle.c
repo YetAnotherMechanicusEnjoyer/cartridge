@@ -1,8 +1,10 @@
 #include "asm.h"
 #include "battle.h"
+#include "battle_func.h"
 #include "dialog.h"
 #include "input.h"
 #include "asm_wrapper.h"
+#include "sram.h"
 #include "ui_assets.h"
 #include <gb/gb.h>
 #include <stdio.h>
@@ -35,6 +37,32 @@ uint8_t get_type_modifier(Type atk_type, Type def_type) {
 }
 
 extern void restore_overworld(void);
+
+void give_xp(BattleEntity* player, BattleEntity* enemy) {
+  char msg[40];
+
+  uint16_t xp_gained = (50 * enemy->level) / 7;
+
+  sprintf(msg, "%s gained %d XP!", player->name, xp_gained);
+  dialog_start(msg);
+
+  player->xp += xp_gained;
+
+  uint16_t xp_needed = (uint16_t)player->level * player->level * 10;
+
+  if (player->xp >= xp_needed) {
+    player->level++;
+
+    player->max_hp += 2;
+    player->hp = player->max_hp;
+    player->attack += 1;
+    player->defense += 1;
+    player->speed += 1;
+
+    sprintf(msg, "%s grew to level %d!", player->name, player->level);
+    dialog_start(msg);
+  }
+}
 
 uint8_t calculate_damage(BattleEntity* attacker, BattleEntity* defender, Move* m) {
   if (m->power == 0 || m->effect != EFF_DAMAGE) return 0;
@@ -101,11 +129,15 @@ void draw_battle_ui(void) {
     }
   }
 
+  sprintf(buf, "Level %d", bm.opponent->level);
+  display_message_bg(10, 0, buf);
   display_message_bg(10, 1, bm.opponent->name);
   sprintf(buf, "HP:%d/%d", bm.opponent->hp, bm.opponent->max_hp);
   display_message_bg(10, 2, buf);
   draw_graphical_hp_bar(10, 3, bm.opponent->hp, bm.opponent->max_hp);
 
+  sprintf(buf, "Level %d", bm.player->level);
+  display_message_bg(1, 7, buf);
   display_message_bg(1, 8, bm.player->name);
   sprintf(buf, "HP:%d/%d", bm.player->hp, bm.player->max_hp);
   display_message_bg(1, 9, buf);
@@ -152,7 +184,13 @@ void battle_update(GameData *data) {
 
   switch (bm.state) {
     case B_INIT:
-      dialog_start("A wild NPC appeared!");
+      if (bm.player->hp == 0 || bm.opponent->hp == 0) {
+        bm.state = B_CHECK_DEATH;
+        break;
+      }
+      char enemy_trigger_msg[40];
+      sprintf(enemy_trigger_msg, "A wild %s appeared!", bm.opponent->name);
+      dialog_start(enemy_trigger_msg);
       dialog_start("What will you do?");
       bm.state = B_WAIT_INTRO;
       break;
@@ -247,7 +285,7 @@ void battle_update(GameData *data) {
       uint8_t move_idx = (bm.current_attacker == ID_PLAYER) ? bm.player_move_idx : bm.enemy_move_idx;
       Move* used_move = &attacker->moves[move_idx];
 
-      char atk_msg[30];
+      char atk_msg[40];
       sprintf(atk_msg, "%s uses %s!", attacker->name, used_move->name);
       dialog_start(atk_msg);
 
@@ -268,7 +306,7 @@ void battle_update(GameData *data) {
         case EFF_DEFENSE_DOWN:
           if (defender->defense > 3) {
             defender->defense -= 2;
-            char def_down_msg[30];
+            char def_down_msg[40];
             sprintf(def_down_msg, "%s's defense fell!", defender->name);
             dialog_start(def_down_msg);
           } else {
@@ -279,7 +317,7 @@ void battle_update(GameData *data) {
         case EFF_DEFENSE_UP:
           if (attacker->defense < 29) {
             attacker->defense += 2;
-            char def_up_msg[30];
+            char def_up_msg[40];
             sprintf(def_up_msg, "%s's defense rose!", attacker->name);
             dialog_start(def_up_msg);
           } else {
@@ -290,7 +328,7 @@ void battle_update(GameData *data) {
         case EFF_ATTACK_DOWN:
           if (defender->attack > 3) {
             defender->attack -= 2;
-            char atk_down_msg[30];
+            char atk_down_msg[40];
             sprintf(atk_down_msg, "%s's attack fell!", defender->name);
             dialog_start(atk_down_msg);
           } else {
@@ -301,7 +339,7 @@ void battle_update(GameData *data) {
         case EFF_ATTACK_UP:
           if (attacker->attack < 29) {
             attacker->attack += 2;
-            char atk_up_msg[30];
+            char atk_up_msg[40];
             sprintf(atk_up_msg, "%s's attack rose!", attacker->name);
             dialog_start(atk_up_msg);
           } else {
@@ -322,6 +360,13 @@ void battle_update(GameData *data) {
         char faint_msg[20];
         sprintf(faint_msg, "%s fainted!", defender->name);
         dialog_start(faint_msg);
+
+        if (bm.current_attacker == ID_PLAYER) {
+          give_xp(bm.player, bm.opponent);
+          sram_write(0, (uint8_t*)&data->current_save, sizeof(SaveData));
+        } else {
+          dialog_start("You blacked out...");
+        }
         bm.state = B_END_BATTLE;
       } else {
         if (bm.turn_step == 0) {

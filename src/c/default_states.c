@@ -1,4 +1,6 @@
+#include "asm.h"
 #include "asm_wrapper.h"
+#include "dialog.h"
 #include "game.h"
 #include "input.h"
 #include <gb/gb.h>
@@ -40,6 +42,11 @@ void title_state(GameData* data) {
     scroll_x_val = 0;
     data->games[data->current_game_id].init(data);
   }
+}
+
+void gameover_init(GameData* data) {
+  clear_window();
+  move_win(7, 0);
 }
 
 void gameover_state(GameData* data) {
