@@ -4,9 +4,26 @@
 #include "game.h"
 #include <stdint.h>
 
+typedef enum {
+  T_NORMAL,
+  T_FIRE,
+  T_WATER,
+  T_GRASS,
+} Type;
+
+typedef enum {
+  EFF_DAMAGE,
+  EFF_DEFENSE_DOWN,
+  EFF_DEFENSE_UP,
+  EFF_ATTACK_DOWN,
+  EFF_ATTACK_UP,
+} MoveEffect;
+
 typedef struct {
   char name[12];
   uint8_t power;
+  Type type;
+  MoveEffect effect;
 } Move;
 
 typedef struct {
@@ -17,6 +34,8 @@ typedef struct {
   uint8_t attack;
   uint8_t defense;
   uint8_t speed;
+  Type type1;
+  Type type2;
   Move moves[4];
 } BattleEntity;
 

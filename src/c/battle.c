@@ -9,19 +9,51 @@
 
 #define HP_BAR_LENGTH 6
 
+#define END_OF_CHART 0xFF
+
 BattleManager bm;
+
+const uint8_t type_chart[] = {
+  T_FIRE, T_GRASS, 20,
+  T_FIRE, T_WATER, 5,
+  T_WATER, T_FIRE, 20,
+  T_WATER, T_GRASS, 5,
+  T_GRASS, T_WATER, 20,
+  T_GRASS, T_FIRE, 5,
+  END_OF_CHART
+};
+
+uint8_t get_type_modifier(Type atk_type, Type def_type) {
+  uint8_t i = 0;
+  while (type_chart[i] != END_OF_CHART) {
+    if (type_chart[i] == atk_type && type_chart[i + 1] == def_type) {
+      return type_chart[i + 2];
+    }
+    i += 3;
+  }
+  return 10;
+}
 
 extern void restore_overworld(void);
 
 uint8_t calculate_damage(BattleEntity* attacker, BattleEntity* defender, Move* m) {
-  if (m->power == 0) return 0;
+  if (m->power == 0 || m->effect != EFF_DAMAGE) return 0;
 
   uint16_t lvl_factor = (2 * attacker->level / 5) + 2;
   uint32_t base = (uint32_t)lvl_factor * m->power * attacker->attack;
 
-  uint32_t dmg = (base / defender->defense) / 50;
+  uint32_t dmg = ((base / defender->defense) / 50) + 2;
 
-  return (uint8_t)dmg + 2;
+  if (m->type == attacker->type1 || m->type == attacker->type2) {
+    dmg = (dmg * 15) / 10;
+  }
+
+  uint8_t mod1 = get_type_modifier(m->type, defender->type1);
+  uint8_t mod2 = get_type_modifier(m->type, defender->type2);
+
+  dmg = (dmg * mod1 * mod2) / 100;
+
+  return (uint8_t)dmg;
 }
 
 void draw_graphical_hp_bar(uint8_t x, uint8_t y, uint16_t hp, uint16_t max_hp) {
@@ -204,12 +236,64 @@ void battle_update(GameData *data) {
       sprintf(atk_msg, "%s uses %s!", attacker->name, used_move->name);
       dialog_start(atk_msg);
 
-      uint8_t dmg = calculate_damage(attacker, defender, used_move);
+      switch (used_move->effect) {
+        case EFF_DAMAGE:
+          uint8_t dmg = calculate_damage(attacker, defender, used_move);
 
-      uint8_t bar_x = (bm.current_attacker == ID_PLAYER) ? 10 : 1;
-      uint8_t bar_y = (bm.current_attacker == ID_PLAYER) ? 3 : 10;
+          uint8_t bar_x = (bm.current_attacker == ID_PLAYER) ? 10 : 1;
+          uint8_t bar_y = (bm.current_attacker == ID_PLAYER) ? 3 : 10;
+          animate_damage(defender, dmg, bar_x, bar_y);
 
-      animate_damage(defender, dmg, bar_x, bar_y);
+          uint8_t mod = get_type_modifier(used_move->type, defender->type1);
+          if (mod == 20) dialog_start("It's super effective!");
+          else if (mod == 5) dialog_start("It's not very effective...");
+          else if (mod == 0) dialog_start("It had no effect!");
+          break;
+
+        case EFF_DEFENSE_DOWN:
+          if (defender->defense > 3) {
+            defender->defense -= 2;
+            char def_down_msg[30];
+            sprintf(def_down_msg, "%s's defense fell!", defender->name);
+            dialog_start(def_down_msg);
+          } else {
+            dialog_start("Defense won't go any lower!");
+          }
+          break;
+
+        case EFF_DEFENSE_UP:
+          if (attacker->defense < 29) {
+            attacker->defense += 2;
+            char def_up_msg[30];
+            sprintf(def_up_msg, "%s's defense rose!", attacker->name);
+            dialog_start(def_up_msg);
+          } else {
+            dialog_start("Defense won't go any higher!");
+          }
+          break;
+
+        case EFF_ATTACK_DOWN:
+          if (defender->attack > 3) {
+            defender->attack -= 2;
+            char atk_down_msg[30];
+            sprintf(atk_down_msg, "%s's attack fell!", defender->name);
+            dialog_start(atk_down_msg);
+          } else {
+            dialog_start("Attack won't go any lower!");
+          }
+          break;
+
+        case EFF_ATTACK_UP:
+          if (attacker->attack < 29) {
+            attacker->attack += 2;
+            char atk_up_msg[30];
+            sprintf(atk_up_msg, "%s's attack rose!", attacker->name);
+            dialog_start(atk_up_msg);
+          } else {
+            dialog_start("Attack won't go any higher!");
+          }
+          break;
+      }
 
       draw_battle_ui();
       bm.state = B_CHECK_DEATH;

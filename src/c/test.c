@@ -25,13 +25,27 @@ uint8_t scroll_x = 0;
 uint8_t scroll_y = 0;
 
 BattleEntity player_stats = {
-  "HERO", 5, 20, 20, 10, 10, 15,
-  { {"THUNDERSHK", 40}, {"TACKLE", 35}, {"", 0}, {"", 0} }
+  "Charmander", 5, 20, 20,
+  10, 10, 15,
+  T_FIRE, T_NORMAL,
+  {
+    { "TACKLE", 40, T_NORMAL, EFF_DAMAGE },
+    { "TAIL WHIP", 0, T_NORMAL, EFF_DEFENSE_DOWN },
+    { "EMBER", 40, T_FIRE, EFF_DAMAGE },
+    { "", 0, T_NORMAL, EFF_DAMAGE }
+  }
 };
 
 BattleEntity npc_stats = {
-  "NPC", 3, 40, 40, 8, 8, 10,
-  { {"TACKLE", 30}, {"TAIL WHIP", 0}, {"", 0}, {"", 0} }
+  "Bulbasaur", 5, 20, 20,
+  9, 9, 13,
+  T_GRASS, T_NORMAL,
+  {
+    { "TACKLE", 40, T_NORMAL, EFF_DAMAGE },
+    { "GROWL", 0, T_NORMAL, EFF_ATTACK_UP },
+    { "", 0, T_NORMAL, EFF_DAMAGE },
+    { "", 0, T_NORMAL, EFF_DAMAGE },
+  }
 };
 
 const uint8_t collision_map[1024] = {
