@@ -71,7 +71,7 @@ void npcs_init(void) {
   for (uint8_t i = 0; i < MAX_NPC; i++) npcs[i].active = 0;
 }
 
-void npcs_render(uint8_t px, uint8_t py, uint8_t scx, uint8_t scy) {
+void npcs_render(uint8_t scx, uint8_t scy) {
   for (uint8_t i = 0; i < MAX_NPC; i++) {
     if (!npcs[i].active) {
       move_sprite(i + 1, 0, 0);

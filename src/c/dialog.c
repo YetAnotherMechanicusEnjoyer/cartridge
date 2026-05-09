@@ -5,6 +5,12 @@
 
 DialogManager dm;
 
+void clear_dialog_area(void) {
+  for (uint8_t i = 1; i < 3; i++) {
+    clear_message(1, i, 18);
+  }
+}
+
 void setup_next_message(void) {
   dm.current_text = dm.queue[dm.q_read];
   dm.char_ptr = 0;
@@ -15,12 +21,6 @@ void setup_next_message(void) {
   display_message(0, 0, "/==================\\");
   display_message(0, 3, "\\==================/");
   move_win(7, 112);
-}
-
-void clear_dialog_area(void) {
-  for (uint8_t i = 1; i < 3; i++) {
-    clear_message(1, i, 18);
-  }
 }
 
 void dialog_start(const char* text) {

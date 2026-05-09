@@ -19,6 +19,6 @@ extern NPC npcs[MAX_NPC];
 
 void npc_process_logic(NPC* n);
 void npcs_init(void);
-void npcs_render(uint8_t player_x, uint8_t player_y, uint8_t scx, uint8_t scy);
+void npcs_render(uint8_t scx, uint8_t scy);
 
 #endif

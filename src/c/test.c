@@ -150,7 +150,7 @@ static void test_movement(GameData* data) {
   move_sprite(0, sprite_x, sprite_y);
   set_sprite_tile(0, 0);
 
-  npcs_render(data->player_x, data->player_y, scroll_x, scroll_y);
+  npcs_render(scroll_x, scroll_y);
 }
 
 static void test_events(GameData* data) {

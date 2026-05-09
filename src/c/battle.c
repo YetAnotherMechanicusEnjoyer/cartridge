@@ -190,23 +190,38 @@ void battle_update(GameData *data) {
 
     case B_MOVE_MENU:
       display_message(2, 1, bm.player->moves[0].name);
-      display_message(2, 2, bm.player->moves[1].name);
+      display_message(11, 1, bm.player->moves[1].name);
+      display_message(2, 2, bm.player->moves[2].name);
+      display_message(11, 2, bm.player->moves[3].name);
 
       display_message(1, 1, bm.menu_cursor == 0 ? ">" : " ");
-      display_message(1, 2, bm.menu_cursor == 1 ? ">" : " ");
+      display_message(10, 1, bm.menu_cursor == 1 ? ">" : " ");
+      display_message(1, 2, bm.menu_cursor == 2 ? ">" : " ");
+      display_message(10, 2, bm.menu_cursor == 3 ? ">" : " ");
+
+      if (INPUT_PRESSED(PAD_LEFT) || INPUT_PRESSED(PAD_RIGHT)) {
+        bm.menu_cursor ^= 1;
+      }
 
       if (INPUT_PRESSED(PAD_UP) || INPUT_PRESSED(PAD_DOWN)) {
-        bm.menu_cursor = 1 - bm.menu_cursor;
+        bm.menu_cursor ^= 2;
       }
 
       if (INPUT_PRESSED(PAD_B)) {
-        clear_message_win(1, 1, 18, 2);
+        set_window_mode(1);
         bm.state = B_MAIN_MENU;
+        bm.menu_cursor = 0;
       }
 
-      if (INPUT_PRESSED(PAD_A)) {
+      if (INPUT_PRESSED(PAD_A) && bm.player->moves[bm.menu_cursor].name[0] != '\0') {
         bm.player_move_idx = bm.menu_cursor;
-        bm.enemy_move_idx = DIV_REG & 0x01;
+
+        uint8_t random_enemy_move;
+        do {
+          random_enemy_move = DIV_REG & 0x03;
+        } while (bm.opponent->moves[random_enemy_move].name[0] == '\0');
+
+        bm.enemy_move_idx = random_enemy_move;
 
         set_window_mode(0);
         bm.state = B_SPEED_CHECK;
