@@ -3,8 +3,11 @@
 #include "dialog.h"
 #include "input.h"
 #include "asm_wrapper.h"
+#include "ui_assets.h"
 #include <gb/gb.h>
 #include <stdio.h>
+
+#define HP_BAR_LENGTH 6
 
 BattleManager bm;
 
@@ -21,6 +24,42 @@ uint8_t calculate_damage(BattleEntity* attacker, BattleEntity* defender, Move* m
   return (uint8_t)dmg + 2;
 }
 
+void draw_graphical_hp_bar(uint8_t x, uint8_t y, uint16_t hp, uint16_t max_hp) {
+  if (max_hp == 0) return;
+
+  uint8_t tiles_to_draw[HP_BAR_LENGTH];
+
+  uint16_t total_pixels = ((uint32_t)hp * (HP_BAR_LENGTH * 8)) / max_hp;
+
+  uint8_t full_tiles = total_pixels / 8;
+  uint8_t remainder = total_pixels % 8;
+
+  for (uint8_t i = 0; i < HP_BAR_LENGTH; i++) {
+    if (i < full_tiles) {
+      tiles_to_draw[i] = HP_TILES_OFFSET + 8;
+    } else if (i == full_tiles) {
+      tiles_to_draw[i] = HP_TILES_OFFSET + remainder;
+    } else {
+      tiles_to_draw[i] = HP_TILES_OFFSET + 0;
+    }
+  }
+
+  set_bkg_tiles(x, y, HP_BAR_LENGTH, 1, tiles_to_draw);
+}
+
+void animate_damage(BattleEntity* target, uint8_t damage, uint8_t bar_x, uint8_t bar_y) {
+  for (uint8_t i = 0; i < damage; i++) {
+    if (target->hp == 0) break;
+
+    target->hp--;
+
+    draw_graphical_hp_bar(bar_x, bar_y, target->hp, target->max_hp);
+
+    vsync();
+    vsync();
+  }
+}
+
 void draw_battle_ui(void) {
   char buf[12];
 
@@ -33,10 +72,12 @@ void draw_battle_ui(void) {
   display_message_bg(10, 1, bm.opponent->name);
   sprintf(buf, "HP:%d/%d", bm.opponent->hp, bm.opponent->max_hp);
   display_message_bg(10, 2, buf);
+  draw_graphical_hp_bar(10, 3, bm.opponent->hp, bm.opponent->max_hp);
 
   display_message_bg(1, 8, bm.player->name);
   sprintf(buf, "HP:%d/%d", bm.player->hp, bm.player->max_hp);
   display_message_bg(1, 9, buf);
+  draw_graphical_hp_bar(1, 10, bm.player->hp, bm.player->max_hp);
 }
 
 void set_window_mode(uint8_t is_menu) {
@@ -65,6 +106,7 @@ void battle_init(GameData* data, BattleEntity* p, BattleEntity* o) {
   }
 
   draw_battle_ui();
+  set_bkg_data(HP_TILES_OFFSET, 9, hp_bar_tiles);
   move_win(7, 112);
 }
 
@@ -154,6 +196,7 @@ void battle_update(GameData *data) {
       set_window_mode(0);
       BattleEntity* attacker = (bm.current_attacker == ID_PLAYER) ? bm.player : bm.opponent;
       BattleEntity* defender = (bm.current_attacker == ID_PLAYER) ? bm.opponent : bm.player;
+
       uint8_t move_idx = (bm.current_attacker == ID_PLAYER) ? bm.player_move_idx : bm.enemy_move_idx;
       Move* used_move = &attacker->moves[move_idx];
 
@@ -162,7 +205,11 @@ void battle_update(GameData *data) {
       dialog_start(atk_msg);
 
       uint8_t dmg = calculate_damage(attacker, defender, used_move);
-      defender->hp = defender->hp <= dmg ? 0 : defender->hp - dmg;
+
+      uint8_t bar_x = (bm.current_attacker == ID_PLAYER) ? 10 : 1;
+      uint8_t bar_y = (bm.current_attacker == ID_PLAYER) ? 3 : 10;
+
+      animate_damage(defender, dmg, bar_x, bar_y);
 
       draw_battle_ui();
       bm.state = B_CHECK_DEATH;
