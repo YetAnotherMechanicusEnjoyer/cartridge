@@ -108,7 +108,9 @@ static void test_movement(GameData* data) {
   switch (terrain_type) {
     case TALL_GRASS:
       if ((DIV_REG & 0xFF) < 5) {
+        fade_out_black();
         battle_init(data, &player_stats, &npc_stats);
+        fade_in_black();
         return;
       }
   }

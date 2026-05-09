@@ -25,6 +25,10 @@ extern uint8_t check_collision(void);
 extern void init_window_layer(void);
 extern void lcd_isr(void);
 
+/* fade */
+extern void fade_out_black(void);
+extern void fade_in_black(void);
+
 /* hitbox */
 extern uint8_t hitbox_x;
 extern uint8_t hitbox_y;

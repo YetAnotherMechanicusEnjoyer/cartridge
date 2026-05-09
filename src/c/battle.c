@@ -1,5 +1,5 @@
-#include "battle.h"
 #include "asm.h"
+#include "battle.h"
 #include "dialog.h"
 #include "input.h"
 #include "asm_wrapper.h"
@@ -239,11 +239,13 @@ void battle_update(GameData *data) {
     }
 
     case B_END_BATTLE:
+      fade_out_black();
+
       move_win(7, 144);
-
       restore_overworld();
-
       data->state = GAME;
+
+      fade_in_black();
       break;
 
     default: break;
