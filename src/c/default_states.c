@@ -7,10 +7,10 @@
 #include <string.h>
 
 uint8_t scroll_x_val = 0;
-uint8_t draw = 1;
 
 void title_state(GameData* data) {
   move_sprite(0, 0, 0);
+  static uint8_t draw = 1;
   if (INPUT_PRESSED(PAD_UP)) {
     data->current_game_id = data->current_game_id > 0 ? data->current_game_id - 1 : data->n_games - 1;
     draw = 1;

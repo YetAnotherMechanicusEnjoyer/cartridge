@@ -26,7 +26,7 @@ typedef struct {
 } Move;
 
 typedef struct BattleEntity {
-  char name[12];
+  char name[15];
   uint8_t level;
   uint16_t hp;
   uint16_t max_hp;

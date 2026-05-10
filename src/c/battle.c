@@ -386,8 +386,7 @@ void battle_update(GameData *data) {
       fade_out_black();
 
       move_win(7, 144);
-      restore_overworld();
-      data->state = GAME;
+      data->state = STATION;
 
       fade_in_black();
       break;

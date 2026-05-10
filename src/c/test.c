@@ -23,12 +23,8 @@
 
 uint8_t col_x = 0;
 uint8_t col_y = 0;
-uint8_t scroll_x = 0;
-uint8_t scroll_y = 0;
 
-BattleEntity wild_enemy;
-
-const uint8_t collision_map[1024] = {
+const uint8_t col_map[1024] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
@@ -92,7 +88,7 @@ static void test_movement(GameData* data) {
   if (INPUT_HELD(PAD_LEFT) && data->player_x > 0) next_x -= 1;
   if (INPUT_HELD(PAD_RIGHT) && data->player_x < 255) next_x += 1;
 
-  uint8_t terrain_type = get_collision_at(next_x + FEET_OFFSET_X, next_y + FEET_OFFSET_Y);
+  uint8_t terrain_type = get_collision_at(next_x + FEET_OFFSET_X, next_y + FEET_OFFSET_Y, col_map);
 
   if (terrain_type != WALL) {
     data->player_x = next_x;
@@ -102,9 +98,10 @@ static void test_movement(GameData* data) {
   switch (terrain_type) {
     case TALL_GRASS:
       if ((DIV_REG & 0xFF) < 5) {
-        generate_wild_encounter(&wild_enemy, data->current_save.player_bentity.level - 5, data->current_save.player_bentity.level + 5, data->frame_counter);
+        BattleEntity enemy;
+        generate_wild_encounter(&enemy, data->current_save->player_ship.level - 5, data->current_save->player_ship.level + 5, data->frame_counter);
         fade_out_black();
-        battle_init(data, &data->current_save.player_bentity, &wild_enemy);
+        battle_init(data, &data->current_save->player_ship, &enemy);
         fade_in_black();
         return;
       }
@@ -170,10 +167,6 @@ static void test_events(GameData* data) {
   */
 
   if (INPUT_RELEASED(PAD_SELECT)) {
-    if (data->current_save.high_score < data->score) {
-      data->current_save.high_score = data->score;
-      sram_write(0, (uint8_t*)&data->current_save, sizeof(SaveData));
-    }
     gameover_init(data);
     data->state = GAMEOVER;
   }
@@ -189,9 +182,9 @@ void test_game(GameData* data) {
   */
   test_events(data);
 
-  if (data->current_save.player_bentity.hp == 0) {
-    data->current_save.player_bentity.hp = data->current_save.player_bentity.max_hp;
-    data->current_save.save_initialized = SAVE_INITIALIZED;
+  if (data->current_save->player_ship.hp == 0) {
+    data->current_save->player_ship.hp = data->current_save->player_ship.max_hp;
+    data->current_save->save_initialized = SAVE_INITIALIZED;
     sram_write(0, (uint8_t*)&data->current_save, sizeof(SaveData));
     gameover_init(data);
     data->state = GAMEOVER;

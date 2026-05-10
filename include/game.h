@@ -1,12 +1,15 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "battle.h"
 #include <stdint.h>
+#include "trader.h"
 
 typedef enum {
   TITLE,
   GAME,
+  STATION,
+  MARKET,
+  TRAVEL,
   BATTLE,
   GAMEOVER
 } GameState;
@@ -22,13 +25,6 @@ typedef struct {
   GameFunction game;
   InitFunction init;
 } Game;
-
-typedef struct {
-  uint8_t save_initialized;
-  uint16_t high_score;
-  BattleEntity player_bentity;
-} SaveData;
-
 
 struct GameData {
   /* State */
@@ -49,7 +45,7 @@ struct GameData {
   uint8_t n_games;
 
   /* Save */
-  SaveData current_save;
+  SaveData* current_save;
   const Game* games;
 };
 
@@ -60,5 +56,10 @@ void gameover_state(GameData* data);
 
 void test_init(GameData* data);
 void test_game(GameData* data);
+
+void station_init(GameData* data);
+void station_state(GameData* data);
+
+void travel_state(GameData* data);
 
 #endif // !GAME_H

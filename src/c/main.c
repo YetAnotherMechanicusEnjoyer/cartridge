@@ -3,6 +3,7 @@
 #include "battle.h"
 #include "battle_func.h"
 #include "dialog.h"
+#include "market.h"
 #include "sprites.h"
 #include "font.h"
 #include "game.h"
@@ -15,11 +16,9 @@ uint8_t* asm_src;
 uint8_t* asm_dest;
 uint16_t asm_size;
 
-#define BKG_TILES_OFFSET 128
-
 void restore_overworld(void) {
-  set_bkg_data(BKG_TILES_OFFSET, background_TILE_COUNT, background_tiles);
-  set_bkg_based_tiles(0, 0, background_WIDTH / 8, background_HEIGHT / 8, background_map, BKG_TILES_OFFSET);
+  //set_bkg_data(128, background_TILE_COUNT, background_tiles);
+  //set_bkg_based_tiles(0, 0, background_WIDTH / 8, background_HEIGHT / 8, background_map, 128);
 
   SHOW_SPRITES;
 }
@@ -29,8 +28,6 @@ static void void_init(GameData *data) { data->state = TITLE; }
 static void init_game(void) {
   font_init();
   font_set(font_load(font_ibm));
-
-  restore_overworld();
 
   //asm_src = (uint8_t*)background_tiles;
   //asm_dest = (uint8_t*)VRAM_ADDR;
@@ -78,18 +75,40 @@ void update(GameData* data) {
 int main(void) {
   Game registry[] = {
     { .name="Test Game", .init=test_init, .game=test_game },
-    { .name="Not a Pong", .init=void_init, .game=title_state },
-    { .name="Testing (again)", .init=void_init, .game=title_state },
-    { .name="Menu", .init=void_init, .game=title_state },
+    { .name="Station", .init=station_init, .game=station_state },
   };
 
   uint8_t len = sizeof(registry) / sizeof(registry[0]);
 
+  /*
+  uint8_t save_initialized;
+  uint32_t credits;
+  uint8_t current_station_id;
+  uint8_t market_seed;
+  InvSlot inventory[MAX_INVENTORY_SLOTS];
+  BattleEntity player_ship;
+
+  uint8_t item_id;
+  uint8_t quantity;
+   */
+
   SaveData current_save = {
     .save_initialized=0,
-    .high_score=0,
-    .player_bentity={
-      .name="Charmander",
+    .credits=100,
+    .current_station_id=0,
+    .market_seed=42,
+    .inventory={
+      {42, 0},
+      {42, 0},
+      {42, 0},
+      {42, 0},
+      {42, 0},
+      {42, 0},
+      {42, 0},
+      {42, 0},
+    },
+    .player_ship={
+      .name="Garry's Shiv",
       .level=5,
       .xp=0,
       .hp=20,
@@ -100,18 +119,19 @@ int main(void) {
       .type1=T_FIRE,
       .type2=T_NORMAL,
       .moves={
-        { .name="TACKLE", .power=40, .type=T_NORMAL, .effect=EFF_DAMAGE },
-        { .name="EMBER", .power=40, .type=T_FIRE, .effect=EFF_DAMAGE },
-        { .name="TAIL WHIP", .power=0, .type=T_NORMAL, .effect=EFF_DEFENSE_DOWN },
-        { .name="SCRATCH", .power=40, .type=T_NORMAL, .effect=EFF_DAMAGE },
+        { .name="BREAKNECK", .power=40, .type=T_NORMAL, .effect=EFF_DAMAGE },
+        { .name="TEMPEST II", .power=40, .type=T_FIRE, .effect=EFF_DAMAGE },
+        { .name="ARRESTER I", .power=0, .type=T_NORMAL, .effect=EFF_DEFENSE_DOWN },
+        { .name="TORMENTER", .power=40, .type=T_NORMAL, .effect=EFF_DAMAGE },
       }
     }
   };
 
-  sram_read(0, (uint8_t*)&current_save, sizeof(SaveData));
+  //sram_read(0, (uint8_t*)&current_save, sizeof(SaveData));
 
   if (current_save.save_initialized != SAVE_INITIALIZED) {
     current_save.save_initialized = SAVE_INITIALIZED;
+    current_save.current_station_id = 0;
     sram_write(0, (uint8_t*)&current_save, sizeof(SaveData));
   }
 
@@ -120,7 +140,7 @@ int main(void) {
     .player_x=80,
     .player_y=72,
     .score=0,
-    .current_save=current_save,
+    .current_save=&current_save,
     .frame_counter=0,
     .current_game_id=0,
     .n_games=len,
@@ -151,8 +171,17 @@ int main(void) {
         title_state(&data);
         break;
       case GAME:
-        SHOW_SPRITES;
+        restore_overworld();
         data.games[data.current_game_id].game(&data);
+        break;
+      case STATION:
+        station_state(&data);
+        break;
+      case MARKET:
+        market_state(&data);
+        break;
+      case TRAVEL:
+        travel_state(&data);
         break;
       case BATTLE:
         battle_update(&data);
