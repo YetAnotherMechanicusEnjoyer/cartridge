@@ -3,6 +3,7 @@
 #include "battle.h"
 #include "battle_func.h"
 #include "dialog.h"
+#include "encounter.h"
 #include "npc.h"
 #include "game.h"
 #include "gb/gb.h"
@@ -25,29 +26,7 @@ uint8_t col_y = 0;
 uint8_t scroll_x = 0;
 uint8_t scroll_y = 0;
 
-BattleEntity charmander_stats = {
-  "Charmander", 5, 20, 20,
-  10, 10, 15, 0,
-  T_FIRE, T_NORMAL,
-  {
-    { "TACKLE", 40, T_NORMAL, EFF_DAMAGE },
-    { "TAIL WHIP", 0, T_NORMAL, EFF_DEFENSE_DOWN },
-    { "EMBER", 40, T_FIRE, EFF_DAMAGE },
-    { "", 0, T_NORMAL, EFF_DAMAGE }
-  }
-};
-
-BattleEntity bulbasaur_stats = {
-  "Bulbasaur", 5, 20, 20,
-  9, 9, 13, 0,
-  T_GRASS, T_NORMAL,
-  {
-    { "TACKLE", 40, T_NORMAL, EFF_DAMAGE },
-    { "GROWL", 0, T_NORMAL, EFF_ATTACK_UP },
-    { "", 0, T_NORMAL, EFF_DAMAGE },
-    { "", 0, T_NORMAL, EFF_DAMAGE },
-  }
-};
+BattleEntity wild_enemy;
 
 const uint8_t collision_map[1024] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -123,8 +102,9 @@ static void test_movement(GameData* data) {
   switch (terrain_type) {
     case TALL_GRASS:
       if ((DIV_REG & 0xFF) < 5) {
+        generate_wild_encounter(&wild_enemy, data->current_save.player_bentity.level - 5, data->current_save.player_bentity.level + 5, data->frame_counter);
         fade_out_black();
-        battle_init(data, &data->current_save.player_bentity, &bulbasaur_stats);
+        battle_init(data, &data->current_save.player_bentity, &wild_enemy);
         fade_in_black();
         return;
       }

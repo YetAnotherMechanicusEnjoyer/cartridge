@@ -45,6 +45,7 @@ void title_state(GameData* data) {
 }
 
 void gameover_init(GameData* data) {
+  (void)data;
   clear_window();
   move_win(7, 0);
 }
