@@ -1,8 +1,9 @@
 #include "trader.h"
 
 #define ITEM_SCRAP 0
-#define ITEM_FUEL 0
+#define ITEM_FUEL 1
 #define ITEM_CORES 2
+#define ITEM_FOOD 3
 
 const uint8_t station18_map[MAX_MAP_SIZE] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -50,7 +51,7 @@ const uint8_t crul1_map[MAX_MAP_SIZE] = {
     1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1,
     1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 1,
     1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
     1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
     1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
     1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
@@ -109,11 +110,19 @@ const uint8_t neocrusader_map[MAX_MAP_SIZE] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 };
 
+const EventDef event_registry[MAX_EVENTS] = {
+  { "GALAXY AT PEACE", "Markets are stable.", 0, 0, 100 },
+  { "GOLD RUSH!", "AI Cores in high demand at Station 18.", 0, ITEM_CORES, 350 },
+  { "PIRATE BLOCKADE", "Fuel scarcity at CRU-L1 due to pirates.", 2, ITEM_FUEL, 400 },
+  { "BUMPER CROP", "Neo Crusader silos are overflowing.", 1, ITEM_FOOD, 20 },
+  { "TECH CRASH", "Scrap prices plummet at Picotech.", 3, ITEM_SCRAP, 10 },
+};
+
 const ItemDef item_registry[MAX_ITEMS_IN_GAME] = {
-{ "SCRAP", 10, 5 },
-{ "WARP FUEL", 50, 15 },
-{ "AI CORES", 200, 50 },
-{ "FOOD", 38, 30 },
+{ "Scrap", 10, 5 },
+{ "Warp Fuel", 50, 15 },
+{ "AI Cores", 200, 50 },
+{ "Food", 38, 30 },
 { "", 0, 0 },
 { "", 0, 0 },
 { "", 0, 0 },
@@ -124,12 +133,12 @@ const ItemDef item_registry[MAX_ITEMS_IN_GAME] = {
 
 const StationDef station_registry[MAX_STATIONS] = {
   {
-    "STATION 18", 2,
+    "Station 18", 2,
     { 50, 100, 200, 130, 100, 100, 100, 100 ,100, 100 },
     station18_map
   },
   {
-    "NEO CRUSADER", 8,
+    "Neo Crusader", 8,
     { 150, 100, 80, 50, 100, 100, 100, 100, 100, 100 },
     neocrusader_map
   },
@@ -139,7 +148,7 @@ const StationDef station_registry[MAX_STATIONS] = {
     crul1_map
   },
   {
-    "PICOTECH", 3,
+    "Picotech", 3,
     {100, 120, 130, 30, 100, 100, 100, 100, 100, 100 },
     neocrusader_map
   },
@@ -149,7 +158,7 @@ const StationDef station_registry[MAX_STATIONS] = {
   },
 };
 
-uint16_t get_market_price(uint8_t item_id, uint8_t station_id, uint8_t market_seed) {
+uint16_t get_market_price(uint8_t item_id, uint8_t station_id, uint8_t market_seed, uint8_t current_event_id) {
   const ItemDef* item = &item_registry[item_id];
   const StationDef* station = &station_registry[station_id];
 
@@ -160,6 +169,15 @@ uint16_t get_market_price(uint8_t item_id, uint8_t station_id, uint8_t market_se
   int16_t price_change = ((fluctuation % (item->volatility * 2 + 1)) - item->volatility);
 
   int32_t final_price = local_price + price_change;
+
+  if (current_event_id > 0 && current_event_id < MAX_EVENTS) {
+    const EventDef* active_event = &event_registry[current_event_id];
+
+    if (active_event->target_station_id == station_id && active_event->target_item_id == item_id) {
+      final_price = (final_price * active_event->price_modifier) / 100;
+    }
+  }
+
   if (final_price < 1) final_price = 1;
 
   return (uint16_t)final_price;

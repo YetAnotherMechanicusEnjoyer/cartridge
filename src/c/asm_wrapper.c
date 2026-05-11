@@ -94,7 +94,7 @@ void clear_lines_bg(uint8_t y, uint8_t h) {
 }
 
 void clear_bg(void) {
-  clear_lines_bg(0, 19);
+  clear_lines_bg(0, 32);
 }
 
 void display_u16(uint8_t x, uint8_t y, uint16_t val) {

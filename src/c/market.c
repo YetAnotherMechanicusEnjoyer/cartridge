@@ -1,3 +1,4 @@
+#include "audio.h"
 #include "market.h"
 #include "asm.h"
 #include "asm_wrapper.h"
@@ -22,6 +23,7 @@
 #define BUY 2
 #define SELL 3
 #define EXIT 4
+#define NEWS 5
 
 typedef struct {
   uint8_t x;
@@ -52,7 +54,9 @@ const unsigned char market_tiles_graphics[] = {
   // 3
   0x00,0x00,0x00,0x00,0x00,0x00,0x7C,0x7C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
   // 4
-  0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x18,0xDB,0xDB,0x7E,0x7E,0x3C,0x3C,0x18,0x18
+  0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x18,0xDB,0xDB,0x7E,0x7E,0x3C,0x3C,0x18,0x18,
+  // 5
+  0x00,0x00,0x00,0x00,0x00,0xBF,0x7C,0x7C,0xBF,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 };
 
 
@@ -63,6 +67,130 @@ static uint8_t menu_items_map[MAX_ITEMS_IN_GAME];
 
 uint8_t scroll_x = 0;
 uint8_t scroll_y = 0;
+
+#define NEWS_CONTENT_X 2
+#define NEWS_CONTENT_Y 12
+#define NEWS_MAX_WIDTH 17
+#define NEWS_TYPE_SPEED 3
+
+void read_news_terminal(GameData* data) {
+  SaveData* save = data->current_save;
+  uint8_t event_id = save->current_event_id;
+
+  if (event_id >= MAX_EVENTS) event_id = 0;
+
+  const EventDef* current_event = &event_registry[event_id];
+  const char* text = current_event->description;
+
+  HIDE_SPRITES;
+  move_bkg(0, 0);
+  clear_bg();
+  char buf[21];
+
+  for(uint8_t i = 0; i < 15; i++) {
+    sprintf(buf, "DECRYPTING... [%u%%]", (i * 100) / 15);
+    display_message_bg(0, 8, buf);
+    if (i % 3 == 0) scroll_bkg(fast_rng(save->market_seed) % 4, fast_rng(save->market_seed) % 2);
+    vsync();
+    delay(50);
+  }
+  move_bkg(0, 0);
+  clear_bg();
+
+  display_message_bg(0, 0, ".------------------.");
+  display_message_bg(0, 1, "|  GNN  LIVE FEED  |");
+  display_message_bg(0, 2, "|------------------|");
+
+  display_message_bg(1, 4, "       _|_       ");
+  display_message_bg(1, 5, "      ( o )      ");
+  display_message_bg(1, 6, "     /--^--\\     ");
+
+  display_message_bg(0, 8, "|==================|");
+
+  display_message_bg(1, 10, current_event->headline);
+
+  display_message_bg(0, 16, "|__________________|");
+  display_message_bg(2, 17, "PRESS [B] TO EXIT");
+
+  uint16_t char_ptr = 0;
+  uint8_t cur_x = NEWS_CONTENT_X;
+  uint8_t cur_y = NEWS_CONTENT_Y;
+  uint8_t timer = 0;
+  uint8_t is_typing = 1;
+
+  while(1) {
+    input_update();
+    if (!is_typing && INPUT_PRESSED(PAD_B)) {
+      sfx_confirm();
+      break;
+    }
+
+    timer++;
+    uint8_t speed = (INPUT_HELD(PAD_A)) ? 1 : NEWS_TYPE_SPEED;
+
+    if (is_typing && timer >= speed) {
+      timer = 0;
+      char c = text[char_ptr];
+
+      if (c == '\0') {
+        is_typing = 0;
+      } else {
+        if (c == ' ') {
+          uint16_t temp_ptr = char_ptr + 1;
+          uint8_t word_len = 0;
+          while(text[temp_ptr] != ' ' && text[temp_ptr] != '\0') {
+            word_len++;
+            temp_ptr++;
+          }
+          if (cur_x + word_len > (NEWS_CONTENT_X + NEWS_MAX_WIDTH)) {
+            cur_x = NEWS_CONTENT_X;
+            cur_y++;
+            char_ptr++;
+            c = text[char_ptr];
+          }
+        } else {
+          play_terminal_click(save->market_seed);
+        }
+        if (c != '\0') {
+          char str[2] = {c, '\0'};
+          display_message_bg(cur_x, cur_y, str);
+          cur_x++;
+          char_ptr++;
+        }
+        if (cur_x >= (NEWS_CONTENT_X + NEWS_MAX_WIDTH)) {
+          cur_x = NEWS_CONTENT_X;
+          cur_y++;
+        }
+      }
+    }
+
+    uint8_t frame_count = sys_time;
+    if (frame_count % 30 == 0) {
+      scroll_bkg(1, 0);
+    } else if (frame_count % 31 == 0) {
+      scroll_bkg(-1, 0);
+    } else {
+      move_bkg(0, 0);
+    }
+
+    if (frame_count % 60 < 30) {
+      display_message_bg(14, 3, "LIVE");
+    } else {
+      display_message_bg(14, 3, "    ");
+    }
+
+    if (!is_typing) {
+      if ((frame_count % 64) < 32) display_message_bg(cur_x, cur_y, " ");
+      else display_message_bg(cur_x, cur_y, "_");
+    }
+
+    vsync();
+  }
+  move_bkg(0, 0);
+  clear_bg();
+  set_bkg_based_tiles(0, 0, 32, 32, station_registry[data->current_save->current_station_id].map, BKG_TILES_OFFSET);
+  SHOW_SPRITES;
+}
 
 void draw_market_box(uint8_t w, uint8_t h) {
   clear_message_win(0, 0, 20, h);
@@ -118,7 +246,7 @@ void open_buy_menu(GameData* data) {
 
   for(uint8_t i = 0; i < menu_max_items; i++) {
     uint8_t item_id = menu_items_map[i];
-    uint16_t price = get_market_price(item_id, data->current_save->current_station_id, data->current_save->market_seed);
+    uint16_t price = get_market_price(item_id, data->current_save->current_station_id, data->current_save->market_seed, data->current_save->current_event_id);
 
     char line[20];
     format_menu_line(line, item_registry[item_id].name, price, 0);
@@ -155,7 +283,7 @@ void open_sell_menu(GameData* data) {
     uint8_t item_id = data->current_save->inventory[slot].item_id;
     uint8_t qty = data->current_save->inventory[slot].quantity;
 
-    uint16_t price = get_market_price(item_id, data->current_save->current_station_id, data->current_save->market_seed);
+    uint16_t price = get_market_price(item_id, data->current_save->current_station_id, data->current_save->market_seed, data->current_save->current_event_id);
 
     char line[20];
     format_menu_line(line, item_registry[item_id].name, price, qty);
@@ -224,16 +352,18 @@ void market_state(GameData* data) {
     }
 
     if (INPUT_PRESSED(PAD_B)) {
+      sfx_confirm();
       move_win(7, 144);
       market_sub_state = M_WALKING;
       dialog_start("Pleasure doing business!");
     }
 
     if (INPUT_PRESSED(PAD_A)) {
+      sfx_confirm();
       draw = 1;
       if (market_sub_state == M_BUYING) {
         uint8_t item_id = menu_items_map[menu_cursor];
-        uint16_t price = get_market_price(item_id, data->current_save->current_station_id, data->current_save->market_seed);
+        uint16_t price = get_market_price(item_id, data->current_save->current_station_id, data->current_save->market_seed, data->current_save->current_event_id);
 
         if (data->current_save->credits >= price) {
           int8_t free_slot = -1;
@@ -261,7 +391,7 @@ void market_state(GameData* data) {
       } else if (market_sub_state == M_SELLING) {
         uint8_t slot = menu_items_map[menu_cursor];
         uint8_t item_id = data->current_save->inventory[slot].item_id;
-        uint16_t price = get_market_price(item_id, data->current_save->current_station_id, data->current_save->market_seed);
+        uint16_t price = get_market_price(item_id, data->current_save->current_station_id, data->current_save->market_seed, data->current_save->current_event_id);
 
         data->current_save->credits += price;
         data->current_save->inventory[slot].quantity--;
@@ -294,17 +424,25 @@ void market_state(GameData* data) {
   if (INPUT_PRESSED(PAD_A)) {
     switch (terrain_type) {
       case BUY:
+        sfx_confirm();
         open_buy_menu(data);
         break;
 
       case SELL:
+        sfx_confirm();
         open_sell_menu(data);
         break;
 
       case EXIT:
+        sfx_confirm();
         HIDE_SPRITES;
         extern void station_init(GameData* data);
         station_init(data);
+        return;
+
+      case NEWS:
+        sfx_confirm();
+        read_news_terminal(data);
         return;
     }
   }

@@ -1,3 +1,4 @@
+#include "audio.h"
 #include "asm.h"
 #include "asm_wrapper.h"
 #include "dialog.h"
@@ -35,7 +36,8 @@ void title_state(GameData* data) {
     draw = 0;
   }
 
-  if (INPUT_PRESSED(PAD_START)) {
+  if (INPUT_PRESSED(PAD_A)) {
+    sfx_confirm();
     clear_window();
     draw = 1;
     data->state = GAME;

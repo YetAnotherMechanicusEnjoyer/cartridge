@@ -1,3 +1,4 @@
+#include "audio.h"
 #include "asm_wrapper.h"
 #include "font.h"
 #include "game.h"
@@ -21,10 +22,10 @@
 #define S_DETAILS 1
 
 const char *menu_options[MENU_OPTIONS_LEN] = {
-  "MARKET",
-  "DEPARTURE",
-  "REPAIR SHIP",
-  "SHIP INFO",
+  "Market",
+  "Departure",
+  "Repair Ship",
+  "Ship Info",
 };
 
 static uint8_t station_sub_state = S_MAIN;
@@ -90,6 +91,7 @@ void station_state(GameData* data) {
     }
 
     if (INPUT_PRESSED(PAD_B)) {
+      sfx_confirm();
       station_sub_state = S_MAIN;
       draw = 1;
     }
@@ -122,8 +124,9 @@ void station_state(GameData* data) {
     display_message_bg(5, 1, current_station->name);
     display_message_bg(0, 2, "====================");
 
-    sprintf(buf, "%u CR", save->credits);
-    display_message_bg(10, 3, buf);
+    sprintf(buf, "%u", save->credits);
+    display_message_bg(16 - strlen(buf), 3, buf);
+    display_message_bg(17, 3, "CR");
 
     display_message_bg(0, 13, "--------------------");
     display_message_bg(1, 14, "SHIP:");
@@ -134,6 +137,7 @@ void station_state(GameData* data) {
   }
 
   if (INPUT_PRESSED(PAD_A)) {
+    sfx_confirm();
     draw = 1;
     switch (menu_cursor) {
       case MARKET_OPTION:
@@ -143,7 +147,6 @@ void station_state(GameData* data) {
 
       case DEPARTURE_OPTION:
         if (save->player_ship.hp > 0) {
-          dialog_start("Preparing warp...");
           travel_init(data);
         } else {
           dialog_start("Ship is too damaged to travel!");

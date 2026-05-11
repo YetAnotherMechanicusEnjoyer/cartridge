@@ -1,5 +1,6 @@
 #include "asm.h"
 #include "asm_wrapper.h"
+#include "audio.h"
 #include "battle.h"
 #include "battle_func.h"
 #include "dialog.h"
@@ -57,6 +58,8 @@ static void init_game(void) {
 
   BGP_REG = 0xE4;
   OBP0_REG = 0xE4;
+
+  init_sound();
 
   SPRITES_8x8;
   SHOW_BKG;

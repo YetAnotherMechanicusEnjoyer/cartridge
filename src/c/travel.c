@@ -1,9 +1,11 @@
+#include "audio.h"
 #include "asm.h"
 #include "asm_wrapper.h"
 #include "battle_func.h"
 #include "encounter.h"
 #include "game.h"
 #include "dialog.h"
+#include <gb/gb.h>
 #include "input.h"
 #include "sram.h"
 #include "trader.h"
@@ -33,34 +35,40 @@ void travel_init(GameData* data) {
 void travel_state(GameData* data) {
   SaveData* save = data->current_save;
 
+  if (!dialog_is_active() && travel_warp) {
+    uint8_t event_roll = fast_rng(data->frame_counter);
+
+    sfx_warp();
+    for(uint8_t i = 0; i < 10; i++) {
+      scroll_bkg( (i % 2 == 0) ? 2 : -2, 0);
+      wait_vbl_done();
+      wait_vbl_done();
+    }
+    move_bkg(0, 0);
+    if (event_roll < 30) {
+      dialog_start("WARNING: PIRATE");
+      dialog_start("INTERCEPTED SIGNAL!");
+
+      uint8_t local_lvl = station_registry[save->current_station_id].tech_level;
+      generate_wild_encounter(&wild_enemy, local_lvl - 2, local_lvl + 2, data->frame_counter);
+
+      fade_out_black();
+      battle_init(data, &data->current_save->player_ship, &wild_enemy);
+      fade_in_black();
+      data->state = BATTLE;
+    } else {
+      save->market_seed = fast_rng(save->market_seed);
+      save->current_event_id = save->market_seed % MAX_EVENTS;
+
+      sram_write(0, (uint8_t*)save, sizeof(SaveData));
+
+      station_init(data);
+    }
+    return;
+  }
+
   if (dialog_is_active()) {
     dialog_update();
-    if (!dialog_is_active() && travel_warp) {
-      uint8_t event_roll = fast_rng(data->frame_counter);
-
-      if (event_roll < 30) {
-        dialog_start("WARNING: PIRATE");
-        dialog_start("INTERCEPTED SIGNAL!");
-
-        uint8_t local_lvl = station_registry[save->current_station_id].tech_level;
-        generate_wild_encounter(&wild_enemy, local_lvl - 2, local_lvl + 2, data->frame_counter);
-
-        fade_out_black();
-        battle_init(data, &data->current_save->player_ship, &wild_enemy);
-        fade_in_black();
-        data->state = BATTLE;
-      } else {
-        uint8_t next_station = fast_rng(data->frame_counter) % 3;
-        save->current_station_id = next_station;
-
-        save->market_seed = fast_rng(save->market_seed);
-
-        sram_write(0, (uint8_t*)save, sizeof(SaveData));
-
-        dialog_start("Arrived at destination.");
-        station_init(data);
-      }
-    }
     return;
   }
 
@@ -77,15 +85,19 @@ void travel_state(GameData* data) {
   }
 
   if (INPUT_PRESSED(PAD_B)) {
+    sfx_confirm();
     station_init(data);
     return;
   }
 
   if (INPUT_PRESSED(PAD_A)) {
+    sfx_confirm();
     if (target_cursor == save->current_station_id) {
       dialog_start("Already at destination.");
     } else {
       dialog_start("Calculating Warp...");
+      save->current_station_id = target_cursor;
+      travel_warp = 1;
     }
     return;
   }
@@ -96,7 +108,7 @@ void travel_state(GameData* data) {
     display_message_bg(0, 0, "\\\\\\ NAV-COMPUTER ///");
     display_message_bg(0, 1, "====================");
 
-    display_message_bg(0, 3, "SELECT DESTINATION:");
+    display_message_bg(0, 3, "Select Destination:");
 
     display_message_bg(0, 10, "--------------------");
 
@@ -135,7 +147,7 @@ void travel_state(GameData* data) {
       display_message_bg(2, 14, " * . ");
     }
 
-    display_message_bg(9, 12, "TARGET DATA:");
+    display_message_bg(9, 12, "Target Data:");
 
     uint8_t dist = (target_cursor == save->current_station_id) ? 0 : (target_cursor * 12 + 4);
     sprintf(buf, "DIST: %u LY", dist);

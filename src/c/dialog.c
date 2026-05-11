@@ -1,6 +1,7 @@
 #include "asm_wrapper.h"
 #include "dialog.h"
 #include <gb/gb.h>
+#include "audio.h"
 #include "input.h"
 
 DialogManager dm;
@@ -73,6 +74,8 @@ void dialog_update(void) {
           dm.char_ptr++;
           c = dm.current_text[dm.char_ptr];
         }
+      } else {
+        play_terminal_click(sys_time);
       }
 
       if (dm.y > DIALOG_MAX_LINES) {

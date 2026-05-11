@@ -1,3 +1,4 @@
+#include "audio.h"
 #include "asm.h"
 #include "battle.h"
 #include "battle_func.h"
@@ -115,9 +116,11 @@ void animate_damage(BattleEntity* target, uint8_t damage, uint8_t bar_x, uint8_t
 
     draw_graphical_hp_bar(bar_x, bar_y, target->hp, target->max_hp);
 
+    if (bar_x < 10 && bar_y > 5) scroll_bkg( (i % 2 == 0) ? 2 : -2, 0);
     vsync();
     vsync();
   }
+  move_bkg(0, 0);
 }
 
 void draw_battle_ui(void) {
@@ -172,6 +175,7 @@ void battle_init(GameData* data, BattleEntity* p, BattleEntity* o) {
   draw_battle_ui();
   set_bkg_data(HP_TILES_OFFSET, 9, hp_bar_tiles);
   move_win(7, 112);
+  move_bkg(0, 0);
 }
 
 void battle_update(GameData *data) {
@@ -214,6 +218,7 @@ void battle_update(GameData *data) {
       }
 
       if (INPUT_PRESSED(PAD_A)) {
+        sfx_confirm();
         if (bm.menu_cursor == 0) {
           set_window_mode(1);
           bm.state = B_MOVE_MENU;
@@ -246,12 +251,14 @@ void battle_update(GameData *data) {
       }
 
       if (INPUT_PRESSED(PAD_B)) {
+        sfx_confirm();
         set_window_mode(1);
         bm.state = B_MAIN_MENU;
         bm.menu_cursor = 0;
       }
 
       if (INPUT_PRESSED(PAD_A) && bm.player->moves[bm.menu_cursor].name[0] != '\0') {
+        sfx_confirm();
         bm.player_move_idx = bm.menu_cursor;
 
         uint8_t random_enemy_move;
@@ -298,8 +305,14 @@ void battle_update(GameData *data) {
           animate_damage(defender, dmg, bar_x, bar_y);
 
           uint8_t mod = get_type_modifier(used_move->type, defender->type1);
-          if (mod == 20) dialog_start("It's super effective!");
-          else if (mod == 5) dialog_start("It's not very effective...");
+          if (mod == 20) {
+            sfx_hit();
+            dialog_start("It's super effective!");
+          }
+          else if (mod == 5) {
+            sfx_laser();
+            dialog_start("It's not very effective...");
+          }
           else if (mod == 0) dialog_start("It had no effect!");
           break;
 
