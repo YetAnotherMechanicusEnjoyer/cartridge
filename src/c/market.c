@@ -3,7 +3,6 @@
 #include "asm_wrapper.h"
 #include "input.h"
 #include "dialog.h"
-#include "maps.h"
 #include "sprites.h"
 #include "trader.h"
 #include "sram.h"
@@ -42,6 +41,20 @@ const Trigger market_triggers[NUM_TRIGGERS] = {
 { 10, 7, 24, 16, ACT_SELL },
 { 8, 17, 32, 16, ACT_EXIT },
 };
+
+const unsigned char market_tiles_graphics[] = {
+  // 0
+  0x00,0x00,0x11,0x00,0x00,0x00,0x00,0x00,0x44,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  // 1
+  0xFF,0xFF,0x80,0x80,0xBF,0xBF,0x80,0x80,0xFB,0xFB,0x80,0x80,0x80,0x80,0xFF,0xFF,
+  // 2
+  0x00,0x00,0x10,0x10,0x10,0x10,0x7C,0x7C,0x10,0x10,0x10,0x10,0x00,0x00,0x00,0x00,
+  // 3
+  0x00,0x00,0x00,0x00,0x00,0x00,0x7C,0x7C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  // 4
+  0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x18,0xDB,0xDB,0x7E,0x7E,0x3C,0x3C,0x18,0x18
+};
+
 
 static uint8_t market_sub_state = M_WALKING;
 static uint8_t menu_cursor = 0;
@@ -162,7 +175,7 @@ void market_init(GameData* data) {
   market_sub_state = M_WALKING;
 
   set_bkg_data(BKG_TILES_OFFSET, 5, market_tiles_graphics);
-  set_bkg_based_tiles(0, 0, 32, 32, station18_map, BKG_TILES_OFFSET);
+  set_bkg_based_tiles(0, 0, 32, 32, station_registry[data->current_save->current_station_id].map, BKG_TILES_OFFSET);
 
   /*for (uint8_t i = 0; i < NUM_TRIGGERS; i++) {
     display_message_bg(market_triggers[i].x, market_triggers[i].y, market_triggers[i].buf);
@@ -271,7 +284,7 @@ void market_state(GameData* data) {
   if (INPUT_HELD(PAD_LEFT) && data->player_x > 0) next_x -= 1;
   if (INPUT_HELD(PAD_RIGHT) && data->player_x < 255) next_x += 1;
 
-  uint8_t terrain_type = get_collision_at(next_x + FEET_OFFSET_X, next_y + FEET_OFFSET_Y, station18_map);
+  uint8_t terrain_type = get_collision_at(next_x + FEET_OFFSET_X, next_y + FEET_OFFSET_Y, station_registry[data->current_save->current_station_id].map);
 
   if (terrain_type != WALL) {
     data->player_x = next_x;

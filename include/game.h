@@ -60,6 +60,7 @@ void test_game(GameData* data);
 void station_init(GameData* data);
 void station_state(GameData* data);
 
+void travel_init(GameData* data);
 void travel_state(GameData* data);
 
 #endif // !GAME_H

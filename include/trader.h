@@ -6,6 +6,7 @@
 #define MAX_INVENTORY_SLOTS 8
 #define MAX_ITEMS_IN_GAME 10
 #define MAX_STATIONS 5
+#define MAX_MAP_SIZE 1024
 
 typedef struct {
   char name[11];
@@ -17,6 +18,10 @@ typedef struct {
   char name[15];
   uint8_t tech_level;
   uint8_t supply_mods[MAX_ITEMS_IN_GAME];
+  const uint8_t* map;
+  uint8_t threat;
+  char faction[8];
+  uint8_t distance;
 } StationDef;
 
 typedef struct {

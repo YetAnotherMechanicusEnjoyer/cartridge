@@ -92,46 +92,47 @@ int main(void) {
   uint8_t quantity;
    */
 
-  SaveData current_save = {
-    .save_initialized=0,
-    .credits=100,
-    .current_station_id=0,
-    .market_seed=42,
-    .inventory={
-      {42, 0},
-      {42, 0},
-      {42, 0},
-      {42, 0},
-      {42, 0},
-      {42, 0},
-      {42, 0},
-      {42, 0},
-    },
-    .player_ship={
-      .name="Garry's Shiv",
-      .level=5,
-      .xp=0,
-      .hp=20,
-      .max_hp=20,
-      .attack=10,
-      .defense=8,
-      .speed=10,
-      .type1=T_FIRE,
-      .type2=T_NORMAL,
-      .moves={
-        { .name="BREAKNECK", .power=40, .type=T_NORMAL, .effect=EFF_DAMAGE },
-        { .name="TEMPEST II", .power=40, .type=T_FIRE, .effect=EFF_DAMAGE },
-        { .name="ARRESTER I", .power=0, .type=T_NORMAL, .effect=EFF_DEFENSE_DOWN },
-        { .name="TORMENTER", .power=40, .type=T_NORMAL, .effect=EFF_DAMAGE },
-      }
-    }
-  };
+  SaveData current_save;
+  current_save.save_initialized = 0;
 
-  //sram_read(0, (uint8_t*)&current_save, sizeof(SaveData));
+  sram_read(0, (uint8_t*)&current_save, sizeof(SaveData));
 
   if (current_save.save_initialized != SAVE_INITIALIZED) {
-    current_save.save_initialized = SAVE_INITIALIZED;
-    current_save.current_station_id = 0;
+    SaveData new_save = {
+      .save_initialized=SAVE_INITIALIZED,
+      .credits=100,
+      .current_station_id=0,
+      .market_seed=42,
+      .inventory={
+        {42, 0},
+        {42, 0},
+        {42, 0},
+        {42, 0},
+        {42, 0},
+        {42, 0},
+        {42, 0},
+        {42, 0},
+      },
+      .player_ship={
+        .name="Cutlass Black",
+        .level=5,
+        .xp=0,
+        .hp=20,
+        .max_hp=20,
+        .attack=10,
+        .defense=8,
+        .speed=10,
+        .type1=T_FIRE,
+        .type2=T_NORMAL,
+        .moves={
+          { .name="TEMPEST II", .power=40, .type=T_NORMAL, .effect=EFF_DAMAGE },
+          { .name="CF-337", .power=40, .type=T_FIRE, .effect=EFF_DAMAGE },
+          { .name="ARRESTER I", .power=0, .type=T_NORMAL, .effect=EFF_DEFENSE_DOWN },
+          { .name="GT-220", .power=40, .type=T_NORMAL, .effect=EFF_DAMAGE },
+        }
+      }
+    };
+    current_save = new_save;
     sram_write(0, (uint8_t*)&current_save, sizeof(SaveData));
   }
 
