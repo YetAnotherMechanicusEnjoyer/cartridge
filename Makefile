@@ -12,7 +12,7 @@ ASSETS_PNG	:=	$(shell find assets -name "*.png")
 AUTOGEN_C		:= $(patsubst assets/%.png, $(AUTOGEN_DIR)/%.c, $(ASSETS_PNG))
 
 ASM_FILES	:=	$(wildcard src/asm/*.asm)
-C_FILES		:=	$(wildcard src/c/*.c) $(AUTOGEN_C)
+C_FILES		:=	$(wildcard src/c/*.c) $(wildcard src/c/dodge_blocks/*.c) $(AUTOGEN_C)
 
 SRC	=	$(ASM_FILES) $(C_FILES)
 
