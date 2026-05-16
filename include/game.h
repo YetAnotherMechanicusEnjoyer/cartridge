@@ -22,6 +22,7 @@ typedef void (*InitFunction)(GameData*);
 
 typedef struct {
   char* name;
+  uint8_t bank;
   GameFunction game;
   InitFunction init;
 } Game;

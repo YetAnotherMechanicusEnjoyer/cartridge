@@ -3,6 +3,7 @@
 #include "asm_wrapper.h"
 #include "dialog.h"
 #include "game.h"
+#include "banking.h"
 #include "input.h"
 #include <gb/gb.h>
 #include <string.h>
@@ -42,6 +43,8 @@ void title_state(GameData* data) {
     draw = 1;
     data->state = GAME;
     scroll_x_val = 0;
+    if (data->games[data->current_game_id].bank != 0)
+      rom_switch(data->games[data->current_game_id].bank);
     data->games[data->current_game_id].init(data);
   }
 }

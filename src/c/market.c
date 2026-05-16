@@ -305,10 +305,6 @@ void market_init(GameData* data) {
   set_bkg_data(BKG_TILES_OFFSET, 5, market_tiles_graphics);
   set_bkg_based_tiles(0, 0, 32, 32, station_registry[data->current_save->current_station_id].map, BKG_TILES_OFFSET);
 
-  /*for (uint8_t i = 0; i < NUM_TRIGGERS; i++) {
-    display_message_bg(market_triggers[i].x, market_triggers[i].y, market_triggers[i].buf);
-  }*/
-
   set_sprite_tile(0, 0);
   move_sprite(0, data->player_x, data->player_y);
 
