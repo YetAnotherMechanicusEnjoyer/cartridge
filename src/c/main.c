@@ -7,6 +7,7 @@
 #include "market.h"
 #include "sprites.h"
 #include "font.h"
+#include "dodge_blocks.h"
 #include "game.h"
 #include "gb/gb.h"
 #include "input.h"
@@ -79,6 +80,7 @@ int main(void) {
   Game registry[] = {
     { .name="Test Game", .init=test_init, .game=test_game },
     { .name="Station", .init=station_init, .game=station_state },
+    { .name="Dodge Blocks", .init=dodge_blocks_init, .game=dodge_blocks_game},
   };
 
   uint8_t len = sizeof(registry) / sizeof(registry[0]);
