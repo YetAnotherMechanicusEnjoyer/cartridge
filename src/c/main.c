@@ -7,7 +7,9 @@
 #include "market.h"
 #include "sprites.h"
 #include "font.h"
+#include "dodge_blocks.h"
 #include "game.h"
+#include "banking.h"
 #include "gb/gb.h"
 #include "input.h"
 #include "sram.h"
@@ -35,7 +37,6 @@ static void init_game(void) {
   //asm_size = 360;
 
   //vram_copy();
-
   set_sprite_data(0, player_TILE_COUNT, player_tiles);
   set_sprite_tile(0, 0);
 
@@ -77,8 +78,9 @@ void update(GameData* data) {
 
 int main(void) {
   Game registry[] = {
-    { .name="Test Game", .init=test_init, .game=test_game },
-    { .name="Station", .init=station_init, .game=station_state },
+    { .name="Test Game", .bank=0, .init=test_init, .game=test_game },
+    { .name="Station", .bank=0, .init=station_init, .game=station_state },
+    { .name="Dodge Blocks", .bank=1, .init=dodge_blocks_init, .game=dodge_blocks_game},
   };
 
   uint8_t len = sizeof(registry) / sizeof(registry[0]);
@@ -175,6 +177,8 @@ int main(void) {
         title_state(&data);
         break;
       case GAME:
+        if (data.games[data.current_game_id].bank != 0)
+          rom_switch(data.games[data.current_game_id].bank);
         restore_overworld();
         data.games[data.current_game_id].game(&data);
         break;

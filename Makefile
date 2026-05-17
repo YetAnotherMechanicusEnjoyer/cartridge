@@ -5,34 +5,37 @@ PNG2ASSET	=	png2asset
 AUTOGEN_DIR	=	src/autogen
 
 AUTOGEN_DIRS	:=	$(shell find $(AUTOGEN_DIR) -type d 2>/dev/null)
-INC_DIRS 			:= include $(AUTOGEN_DIRS)
-CFLAGS				:=	$(addprefix -I,$(INC_DIRS)) -Wa-l -Wl-m -Wl-j -Wl-yt0x1B -Wl-ya4
+INC_DIRS 			:= include $(AUTOGEN_DIR) $(AUTOGEN_DIR)/8x8 $(AUTOGEN_DIR)/map
+CFLAGS				:=	$(addprefix -I,$(INC_DIRS)) -Wa-l -Wl-m -Wl-j -Wl-yt0x1E -Wl-ya4
 
 ASSETS_PNG	:=	$(shell find assets -name "*.png")
 AUTOGEN_C		:= $(patsubst assets/%.png, $(AUTOGEN_DIR)/%.c, $(ASSETS_PNG))
 
 ASM_FILES	:=	$(wildcard src/asm/*.asm)
-C_FILES		:=	$(wildcard src/c/*.c) $(AUTOGEN_C)
+C_FILES		:=	$(wildcard src/c/*.c) $(wildcard src/c/dodge_blocks/*.c) $(AUTOGEN_C)
 
 SRC	=	$(ASM_FILES) $(C_FILES)
 
 all: $(AUTOGEN_DIRS) $(CARTRIDGE)
 
 $(AUTOGEN_DIRS):
-	@mkdir -p $@
+	@mkdir -p $(AUTOGEN_DIR)/8x8 $(AUTOGEN_DIR)/map
 	@echo -e "\x1b[36m[Autogen] Directory: $@\x1b[0m"
 
 $(AUTOGEN_DIR)/%.c: assets/%.png
+	@mkdir -p $(AUTOGEN_DIR)/8x8 $(AUTOGEN_DIR)/map
 	@printf "\x1b[31m"
 	@$(PNG2ASSET) $< -c $@
 	@echo -e "\x1b[34m[Autogen] Default: $@\x1b[0m"
 
 $(AUTOGEN_DIR)/8x8/%.c: assets/8x8/%.png
+	@mkdir -p $(AUTOGEN_DIR)/8x8 $(AUTOGEN_DIR)/map
 	@printf "\x1b[31m"
 	@$(PNG2ASSET) $< -c $@ -spr8x8 -keep_duplicate_tiles
 	@echo -e "\x1b[34m[Autogen] Sprite: $@\x1b[0m"
 
 $(AUTOGEN_DIR)/map/%.c: assets/map/%.png
+	@mkdir -p $(AUTOGEN_DIR)/8x8 $(AUTOGEN_DIR)/map
 	@printf "\x1b[31m"
 	@$(PNG2ASSET) $< -c $@ -map -noflip
 	@echo -e "\x1b[34m[Autogen] Map: $@\x1b[0m"
