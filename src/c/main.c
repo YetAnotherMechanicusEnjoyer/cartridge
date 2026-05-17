@@ -106,7 +106,7 @@ void update(GameData* data) {
 
 int main(void) {
   Game registry[] = {
-    { .name="Station", .bank=0, .init=station_init, .game=station_state },
+    { .name="Star Civil", .bank=0, .init=station_init, .game=station_state },
     { .name="Dodge Blocks", .bank=1, .init=dodge_blocks_init, .game=dodge_blocks_game},
   };
 
