@@ -28,31 +28,6 @@ jobs:
             echo "same_repo=false" >> $GITHUB_OUTPUT
           fi
 
-  check_compilation:
-    name: CMake CI
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
-    container: epitechcontent/epitest-docker:latest
-    needs: [check_repository]
-    if: ${{ success() && needs.check_repository.outputs.same_repo == 'false' }}
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
-        with:
-          repository: ""
-
-      - name: Build & Compile Repo
-        run: make
-
-      - name: Check Compilation
-        run: |
-          for binary in ${{ env.EXECUTABLE }}; do
-            if [ ! -x "$binary" && ! -x "build/$binary" ]; then
-              echo "::error::File $binary does not exist or is not executable"
-              exit 1
-            fi
-          done
-
   push_to_mirror:
     runs-on: ubuntu-latest
     needs: [check_compilation]
