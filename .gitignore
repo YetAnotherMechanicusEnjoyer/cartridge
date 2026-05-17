@@ -1,0 +1,7 @@
+*.gb
+*.map
+*.noi
+compile_commands.json
+*.sav
+*.old
+src/autogen

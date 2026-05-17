@@ -1,0 +1,179 @@
+#include "asm.h"
+#include "asm_wrapper.h"
+#include "audio.h"
+#include "battle.h"
+#include "battle_func.h"
+#include "dialog.h"
+#include "market.h"
+#include "sprites.h"
+#include "font.h"
+#include "dodge_blocks.h"
+#include "game.h"
+#include "banking.h"
+#include "gb/gb.h"
+#include "input.h"
+#include "sram.h"
+#include "timers.h"
+
+uint8_t* asm_src;
+uint8_t* asm_dest;
+uint16_t asm_size;
+
+void restore_overworld(void) {
+  SHOW_SPRITES;
+}
+
+SaveData default_save(void) {
+  SaveData new_save = {
+    .save_initialized=SAVE_INITIALIZED,
+    .credits=100,
+    .current_station_id=0,
+    .market_seed=42,
+    .inventory={
+      {42, 0},
+      {42, 0},
+      {42, 0},
+      {42, 0},
+      {42, 0},
+      {42, 0},
+      {42, 0},
+      {42, 0},
+    },
+    .player_ship={
+      .name="Cutlass Black",
+      .level=5,
+      .xp=0,
+      .hp=20,
+      .max_hp=20,
+      .attack=10,
+      .defense=8,
+      .speed=10,
+      .type1=T_FIRE,
+      .type2=T_NORMAL,
+      .moves={
+        { .name="TEMPEST II", .power=40, .type=T_NORMAL, .effect=EFF_DAMAGE },
+        { .name="CF-337", .power=40, .type=T_FIRE, .effect=EFF_DAMAGE },
+        { .name="ARRESTER I", .power=0, .type=T_NORMAL, .effect=EFF_DEFENSE_DOWN },
+        { .name="GT-220", .power=40, .type=T_NORMAL, .effect=EFF_DAMAGE },
+      }
+    }
+  };
+  return new_save;
+}
+
+static void void_init(GameData *data) { data->state = TITLE; }
+
+static void init_game(void) {
+  font_init();
+  font_set(font_load(font_ibm));
+
+  set_sprite_data(0, player_TILE_COUNT, player_tiles);
+  set_sprite_tile(0, 0);
+
+  for(uint16_t i = START_WINDOW_MAP; i < END_WINDOW_MAP; i++) {
+    while(STAT_REG & 0x02);
+    *(uint8_t*)i = 0;
+  }
+
+  init_window_layer();
+
+  STAT_REG |= STATF_LYC;
+  LYC_REG = 64;
+
+  CRITICAL {
+    add_LCD(lcd_isr);
+  }
+  set_interrupts(VBL_IFLAG);
+
+  BGP_REG = 0xE4;
+  OBP0_REG = 0xE4;
+
+  init_sound();
+
+  SPRITES_8x8;
+  SHOW_BKG;
+  SHOW_WIN;
+  DISPLAY_ON;
+}
+
+void update(GameData* data) {
+  vsync();
+  timers_update();
+  input_update();
+
+  data->frame_counter++;
+}
+
+int main(void) {
+  Game registry[] = {
+    { .name="Star Civil", .bank=0, .init=station_init, .game=station_state },
+    { .name="Dodge Blocks", .bank=1, .init=dodge_blocks_init, .game=dodge_blocks_game},
+  };
+
+  uint8_t len = sizeof(registry) / sizeof(registry[0]);
+
+  SaveData current_save;
+  current_save.save_initialized = 0;
+
+  sram_read(0, (uint8_t*)&current_save, sizeof(SaveData));
+
+  if (current_save.save_initialized != SAVE_INITIALIZED) {
+    current_save = default_save();
+    sram_write(0, (uint8_t*)&current_save, sizeof(SaveData));
+  }
+
+  GameData data = {
+    .state=TITLE,
+    .player_x=80,
+    .player_y=72,
+    .score=0,
+    .current_save=&current_save,
+    .frame_counter=0,
+    .current_game_id=0,
+    .n_games=len,
+    .games=registry,
+  };
+
+  init_game();
+
+  while(1) {
+    update(&data);
+
+    if (dialog_is_active()) {
+      dialog_update();
+      continue;
+    }
+
+
+    switch (data.state) {
+      case TITLE:
+        HIDE_SPRITES;
+        move_win(7, 0);
+        title_state(&data);
+        break;
+      case GAME:
+        if (data.games[data.current_game_id].bank != 0)
+          rom_switch(data.games[data.current_game_id].bank);
+        restore_overworld();
+        data.games[data.current_game_id].game(&data);
+        break;
+      case STATION:
+        HIDE_SPRITES;
+        station_state(&data);
+        break;
+      case MARKET:
+        market_state(&data);
+        break;
+      case TRAVEL:
+        travel_state(&data);
+        break;
+      case BATTLE:
+        battle_update(&data);
+        break;
+      case GAMEOVER:
+        HIDE_SPRITES;
+        gameover_state(&data);
+        break;
+    }
+  }
+}
