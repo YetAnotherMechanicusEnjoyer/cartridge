@@ -20,10 +20,45 @@ uint8_t* asm_dest;
 uint16_t asm_size;
 
 void restore_overworld(void) {
-  //set_bkg_data(128, background_TILE_COUNT, background_tiles);
-  //set_bkg_based_tiles(0, 0, background_WIDTH / 8, background_HEIGHT / 8, background_map, 128);
-
   SHOW_SPRITES;
+}
+
+SaveData default_save(void) {
+  SaveData new_save = {
+    .save_initialized=SAVE_INITIALIZED,
+    .credits=100,
+    .current_station_id=0,
+    .market_seed=42,
+    .inventory={
+      {42, 0},
+      {42, 0},
+      {42, 0},
+      {42, 0},
+      {42, 0},
+      {42, 0},
+      {42, 0},
+      {42, 0},
+    },
+    .player_ship={
+      .name="Cutlass Black",
+      .level=5,
+      .xp=0,
+      .hp=20,
+      .max_hp=20,
+      .attack=10,
+      .defense=8,
+      .speed=10,
+      .type1=T_FIRE,
+      .type2=T_NORMAL,
+      .moves={
+        { .name="TEMPEST II", .power=40, .type=T_NORMAL, .effect=EFF_DAMAGE },
+        { .name="CF-337", .power=40, .type=T_FIRE, .effect=EFF_DAMAGE },
+        { .name="ARRESTER I", .power=0, .type=T_NORMAL, .effect=EFF_DEFENSE_DOWN },
+        { .name="GT-220", .power=40, .type=T_NORMAL, .effect=EFF_DAMAGE },
+      }
+    }
+  };
+  return new_save;
 }
 
 static void void_init(GameData *data) { data->state = TITLE; }
@@ -32,15 +67,8 @@ static void init_game(void) {
   font_init();
   font_set(font_load(font_ibm));
 
-  //asm_src = (uint8_t*)background_tiles;
-  //asm_dest = (uint8_t*)VRAM_ADDR;
-  //asm_size = 360;
-
-  //vram_copy();
   set_sprite_data(0, player_TILE_COUNT, player_tiles);
   set_sprite_tile(0, 0);
-
-  set_sprite_data(4, npc1_TILE_COUNT, npc1_tiles);
 
   for(uint16_t i = START_WINDOW_MAP; i < END_WINDOW_MAP; i++) {
     while(STAT_REG & 0x02);
@@ -78,7 +106,6 @@ void update(GameData* data) {
 
 int main(void) {
   Game registry[] = {
-    { .name="Test Game", .bank=0, .init=test_init, .game=test_game },
     { .name="Station", .bank=0, .init=station_init, .game=station_state },
     { .name="Dodge Blocks", .bank=1, .init=dodge_blocks_init, .game=dodge_blocks_game},
   };
@@ -91,41 +118,7 @@ int main(void) {
   sram_read(0, (uint8_t*)&current_save, sizeof(SaveData));
 
   if (current_save.save_initialized != SAVE_INITIALIZED) {
-    SaveData new_save = {
-      .save_initialized=SAVE_INITIALIZED,
-      .credits=100,
-      .current_station_id=0,
-      .market_seed=42,
-      .inventory={
-        {42, 0},
-        {42, 0},
-        {42, 0},
-        {42, 0},
-        {42, 0},
-        {42, 0},
-        {42, 0},
-        {42, 0},
-      },
-      .player_ship={
-        .name="Cutlass Black",
-        .level=5,
-        .xp=0,
-        .hp=20,
-        .max_hp=20,
-        .attack=10,
-        .defense=8,
-        .speed=10,
-        .type1=T_FIRE,
-        .type2=T_NORMAL,
-        .moves={
-          { .name="TEMPEST II", .power=40, .type=T_NORMAL, .effect=EFF_DAMAGE },
-          { .name="CF-337", .power=40, .type=T_FIRE, .effect=EFF_DAMAGE },
-          { .name="ARRESTER I", .power=0, .type=T_NORMAL, .effect=EFF_DEFENSE_DOWN },
-          { .name="GT-220", .power=40, .type=T_NORMAL, .effect=EFF_DAMAGE },
-        }
-      }
-    };
-    current_save = new_save;
+    current_save = default_save();
     sram_write(0, (uint8_t*)&current_save, sizeof(SaveData));
   }
 
@@ -165,6 +158,7 @@ int main(void) {
         data.games[data.current_game_id].game(&data);
         break;
       case STATION:
+        HIDE_SPRITES;
         station_state(&data);
         break;
       case MARKET:

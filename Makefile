@@ -16,7 +16,7 @@ C_FILES		:=	$(wildcard src/c/*.c) $(wildcard src/c/dodge_blocks/*.c) $(AUTOGEN_C
 
 SRC	=	$(ASM_FILES) $(C_FILES)
 
-all: $(AUTOGEN_DIRS) $(CARTRIDGE)
+all: $(CARTRIDGE)
 
 $(AUTOGEN_DIRS):
 	@mkdir -p $(AUTOGEN_DIR)/8x8 $(AUTOGEN_DIR)/map
@@ -40,7 +40,7 @@ $(AUTOGEN_DIR)/map/%.c: assets/map/%.png
 	@$(PNG2ASSET) $< -c $@ -map -noflip
 	@echo -e "\x1b[34m[Autogen] Map: $@\x1b[0m"
 
-$(CARTRIDGE): $(SRC)
+$(CARTRIDGE): $(AUTOGEN_DIRS) $(SRC)
 	@echo -e "\x1b[33m[Compiling] $@...\x1b[0m"
 	@$(CC) $(CFLAGS) -o $@ $(SRC)
 	@echo -e "\x1b[32m[OK] $@ compiled\x1b[0m"

@@ -7,7 +7,6 @@
 #include "dodge_entities.h"
 #include "dodge_ui.h"
 #include "dodge_audio.h"
-#include "dodge_save.h"
 
 #include "../autogen/8x8/spaceship.h"
 #include "../autogen/8x8/spaceship_boost.h"
@@ -142,7 +141,6 @@ static void end_game(GameData* data)
     dodge.state = STATE_END_SCREEN;
 
     dodge_audio_hit();
-    dodge_save_high_score(data);
     dodge_entities_hide_all(&dodge);
     HIDE_WIN;
     dodge_ui_draw_end_screen(data);
@@ -153,7 +151,6 @@ static void win_game(GameData* data)
     dodge.state = STATE_WIN_SCREEN;
 
     dodge_audio_level_up();
-    dodge_save_high_score(data);
     dodge_entities_hide_all(&dodge);
     HIDE_WIN;
     dodge_ui_draw_win_screen(data);

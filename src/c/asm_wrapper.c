@@ -18,6 +18,9 @@ const uint8_t* collision_map_ptr;
 uint8_t scroll_x = 0;
 uint8_t scroll_y = 0;
 
+uint8_t col_x = 0;
+uint8_t col_y = 0;
+
 static uint8_t getlen(const char* str) {
     uint8_t i = 0;
 

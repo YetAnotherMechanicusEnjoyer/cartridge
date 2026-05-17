@@ -50,13 +50,12 @@ struct GameData {
   const Game* games;
 };
 
+SaveData default_save(void);
+
 void title_state(GameData* data);
 
 void gameover_init(GameData* data);
 void gameover_state(GameData* data);
-
-void test_init(GameData* data);
-void test_game(GameData* data);
 
 void station_init(GameData* data);
 void station_state(GameData* data);
