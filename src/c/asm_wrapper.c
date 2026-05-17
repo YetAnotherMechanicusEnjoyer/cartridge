@@ -15,6 +15,9 @@ uint8_t hitbox_x;
 uint8_t hitbox_y;
 const uint8_t* collision_map_ptr;
 
+uint8_t scroll_x = 0;
+uint8_t scroll_y = 0;
+
 static uint8_t getlen(const char* str) {
     uint8_t i = 0;
 
@@ -124,4 +127,10 @@ uint8_t get_collision_at(uint8_t x, uint8_t y, const uint8_t* map) {
   hitbox_y = y;
   collision_map_ptr = map;
   return get_hitbox_value();
+}
+
+void apply_scroll_xy(uint8_t x, uint8_t y) {
+  scroll_x = x;
+  scroll_y = y;
+  apply_scroll();
 }

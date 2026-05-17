@@ -5,7 +5,7 @@
 
 #define MAX_INVENTORY_SLOTS 8
 #define MAX_ITEMS_IN_GAME 10
-#define MAX_STATIONS 5
+#define MAX_STATIONS 4
 #define MAX_MAP_SIZE 1024
 #define MAX_EVENTS 5
 

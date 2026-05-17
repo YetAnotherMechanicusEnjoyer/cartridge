@@ -22,4 +22,6 @@ void display_u16_bg(uint8_t x, uint8_t y, uint16_t val);
 
 uint8_t get_collision_at(uint8_t x, uint8_t y, const uint8_t* map);
 
+void apply_scroll_xy(uint8_t x, uint8_t y);
+
 #endif // !ASM_WRAPPER_H

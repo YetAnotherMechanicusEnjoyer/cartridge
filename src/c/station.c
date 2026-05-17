@@ -1,3 +1,4 @@
+#include "asm.h"
 #include "audio.h"
 #include "asm_wrapper.h"
 #include "font.h"
@@ -32,6 +33,51 @@ static uint8_t station_sub_state = S_MAIN;
 static uint8_t draw = 1;
 static uint8_t draw_cursor = 1;
 
+static uint8_t cheat_progress = 0;
+
+uint8_t any_input_pressed(void) {
+  return INPUT_PRESSED(PAD_UP) || INPUT_PRESSED(PAD_DOWN) || INPUT_PRESSED(PAD_START) || INPUT_PRESSED(PAD_SELECT) || INPUT_PRESSED(PAD_RIGHT) || INPUT_PRESSED(PAD_LEFT) || INPUT_PRESSED(PAD_B) || INPUT_PRESSED(PAD_A);
+}
+
+void cheat_code(SaveData* save) {
+    // Code : UP, UP, DOWN, DOWN, SELECT
+    if (INPUT_PRESSED(PAD_UP) && (cheat_progress == 0 || cheat_progress == 1)) cheat_progress++;
+    else if (INPUT_PRESSED(PAD_DOWN) && (cheat_progress == 2 || cheat_progress == 3)) cheat_progress++;
+    else if (INPUT_PRESSED(PAD_SELECT) && cheat_progress == 4) {
+        save->credits = 99999;
+        sfx_warp();
+        cheat_progress = 0;
+    } else if (any_input_pressed()) {
+        cheat_progress = 0;
+    }
+}
+
+void snap_player_to_tile(GameData* data, uint8_t target_tile) {
+    const uint8_t* current_map = station_registry[data->current_save->current_station_id].map;
+
+    for (uint16_t i = 0; i < 1024; i++) {
+        if (current_map[i] == target_tile) {
+            uint8_t tile_x = i % 32;
+            uint8_t tile_y = i / 32;
+
+            data->player_x = tile_x * 8;
+            data->player_y = tile_y * 8;
+
+            int16_t cam_x = (int16_t)data->player_x - 80;
+            int16_t cam_y = (int16_t)data->player_y - 72;
+
+            if (cam_x < 0) cam_x = 0;
+            if (cam_x > 96) cam_x = 96;
+            if (cam_y < 0) cam_y = 0;
+            if (cam_y > 112) cam_y = 112;
+
+            apply_scroll_xy(cam_x, cam_y);
+
+            break;
+        }
+    }
+}
+
 void station_init(GameData* data) {
   data->state = STATION;
 
@@ -54,6 +100,13 @@ void station_state(GameData* data) {
     dialog_update();
     return;
   }
+
+  if (save->player_ship.hp == 0 && save->credits < 50) {
+    gameover_init(data);
+    return;
+  }
+
+  cheat_code(save);
 
   static uint8_t menu_cursor = 0;
   char buf[22];
@@ -141,6 +194,7 @@ void station_state(GameData* data) {
     draw = 1;
     switch (menu_cursor) {
       case MARKET_OPTION:
+        snap_player_to_tile(data, 4);
         market_init(data);
         data->state = MARKET;
         break;

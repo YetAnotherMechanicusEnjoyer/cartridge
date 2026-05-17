@@ -85,18 +85,6 @@ int main(void) {
 
   uint8_t len = sizeof(registry) / sizeof(registry[0]);
 
-  /*
-  uint8_t save_initialized;
-  uint32_t credits;
-  uint8_t current_station_id;
-  uint8_t market_seed;
-  InvSlot inventory[MAX_INVENTORY_SLOTS];
-  BattleEntity player_ship;
-
-  uint8_t item_id;
-  uint8_t quantity;
-   */
-
   SaveData current_save;
   current_save.save_initialized = 0;
 
@@ -157,13 +145,7 @@ int main(void) {
 
   while(1) {
     update(&data);
-    /*
-    if (data.frame_counter % 10 == 0) {
-      uint8_t height = data.state == GAME ? 2 : HEIGHT - 1;
-      display_message(0, height, "c:");
-      update_score_display(2, height, pad_current);
-    }
-    */
+
     if (dialog_is_active()) {
       dialog_update();
       continue;

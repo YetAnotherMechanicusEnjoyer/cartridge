@@ -49,19 +49,61 @@ void title_state(GameData* data) {
   }
 }
 
+const char* game_over_texts[3] = {
+    "YOUR SHIP IS NOW AN ASHTRAY.",
+    "PIRATES THANK YOU FOR THE FREE SCRAP.",
+    "YOU DIED ALONE IN THE COLD VACUUM."
+};
+
 void gameover_init(GameData* data) {
-  (void)data;
   clear_window();
-  move_win(7, 0);
+  clear_bg();
+  move_win(7, 144);
+  data->state = GAMEOVER;
+
+  display_message_bg(2, 1,   ".      * .");
+  display_message_bg(16, 2,  ".");
+  display_message_bg(1, 7,   "    .");
+  display_message_bg(18, 8,  "*");
+
+  display_message_bg(5, 4,   "___/|\\ ");
+  display_message_bg(13, 4,  " ___");
+  display_message_bg(4, 5,  "<  X R K ");
+  display_message_bg(13, 5, " >");
+  display_message_bg(5, 6,   "~~~\\|/ ");
+  display_message_bg(13, 6,  " ~~~");
+
+  display_message_bg(3, 3,   "x");
+  display_message_bg(15, 3,  "o");
+  display_message_bg(12, 7,  "#");
+  display_message_bg(7, 9,   "x");
+
+  SaveData* save = data->current_save;
+
+  save->market_seed = (save->market_seed * 17) + fast_rng(save->market_seed + data->frame_counter) + data->frame_counter;
+  uint8_t game_over_index = save->market_seed % 3;
+  dialog_start(">>> CRITICAL FAILURE <<<");
+  dialog_start(game_over_texts[game_over_index]);
+  dialog_start("/!\\ GAME OVER /!\\");
 }
 
 void gameover_state(GameData* data) {
   move_sprite(0, 0, 0);
-  display_middle(8, "GAME OVER");
-  display_middle(10, "PRESS START");
 
-  if (INPUT_PRESSED(PAD_START)) {
-    clear_window();
-    data->state = TITLE;
+  if (data->frame_counter % 30 == 0) {
+    scroll_bkg(1, 0);
+  } else if (data->frame_counter % 31 == 0) {
+    scroll_bkg(-1, 0);
+  } else {
+    move_bkg(0, 0);
   }
+
+  if (dialog_is_active()) {
+    dialog_update();
+    return;
+  }
+
+  clear_window();
+  clear_bg();
+  data->state = TITLE;
 }

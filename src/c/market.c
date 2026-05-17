@@ -24,6 +24,7 @@
 #define SELL 3
 #define EXIT 4
 #define NEWS 5
+#define NPC 6
 
 typedef struct {
   uint8_t x;
@@ -46,17 +47,19 @@ const Trigger market_triggers[NUM_TRIGGERS] = {
 
 const unsigned char market_tiles_graphics[] = {
   // 0
-  0x00,0x00,0x11,0x00,0x00,0x00,0x00,0x00,0x44,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00, 0x18,0x00, 0x24,0x00, 0x00,0x00, 0x00,0x00, 0x24,0x00, 0x18,0x00, 0x00,0x00,
   // 1
-  0xFF,0xFF,0x80,0x80,0xBF,0xBF,0x80,0x80,0xFB,0xFB,0x80,0x80,0x80,0x80,0xFF,0xFF,
+  0xFF,0xFF, 0x99,0xFF, 0x81,0xDB, 0xFF,0xFF, 0xFF,0x81, 0xC3,0x81, 0xFF,0x81, 0xFF,0xFF,
   // 2
-  0x00,0x00,0x10,0x10,0x10,0x10,0x7C,0x7C,0x10,0x10,0x10,0x10,0x00,0x00,0x00,0x00,
+  0x3C,0x3C, 0x7E,0x42, 0x7E,0x5A, 0x5A,0x5A, 0xFF,0xFF, 0x81,0xFF, 0xBD,0xC3, 0xFF,0xFF,
   // 3
-  0x00,0x00,0x00,0x00,0x00,0x00,0x7C,0x7C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x3C,0x3C, 0x7E,0x42, 0x5A,0x5A, 0x7E,0x42, 0xFF,0xFF, 0xA5,0xFF, 0xA5,0xFF, 0xFF,0xFF,
   // 4
-  0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x18,0xDB,0xDB,0x7E,0x7E,0x3C,0x3C,0x18,0x18,
+  0xFF,0xFF, 0x81,0xFF, 0x99,0xFF, 0xC3,0xFF, 0xC3,0xFF, 0x99,0xFF, 0x81,0xFF, 0xFF,0xFF,
   // 5
-  0x00,0x00,0x00,0x00,0x00,0xBF,0x7C,0x7C,0xBF,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+  0x18,0x00, 0x3C,0x00, 0x66,0x00, 0x3C,0x00, 0x18,0x18, 0x24,0x3C, 0x42,0x7E, 0xFF,0xFF,
+  // 6
+  0x18,0x18, 0x24,0x3C, 0x3C,0x3C, 0x7E,0x42, 0x7E,0x5A, 0x7E,0x42, 0x3C,0x24, 0x3C,0x3C
 };
 
 
@@ -65,13 +68,45 @@ static uint8_t menu_cursor = 0;
 static uint8_t menu_max_items = 0;
 static uint8_t menu_items_map[MAX_ITEMS_IN_GAME];
 
-uint8_t scroll_x = 0;
-uint8_t scroll_y = 0;
-
 #define NEWS_CONTENT_X 2
 #define NEWS_CONTENT_Y 12
 #define NEWS_MAX_WIDTH 17
 #define NEWS_TYPE_SPEED 3
+
+void trigger_station_npc(GameData* data) {
+  uint8_t station_id = data->current_save->current_station_id;
+
+  switch (station_id) {
+    case 0:
+      dialog_start("SEEDY TRADER:");
+      dialog_start("WANT SOME ILLEGAL QUANTUM SAUCE?");
+      dialog_start("JUST KIDDING, IT'S JUST SODA.");
+      break;
+
+    case 1:
+      dialog_start("ZEALOT RECRUIT:");
+      dialog_start("OUR ENGINES PURR LIKE SPACE CATS!");
+      dialog_start("PRAISE THE SACRED CYLINDER!");
+      break;
+
+    case 2:
+      dialog_start("GRUMPY MINER:");
+      dialog_start("I'VE BEEN SCRAPING ASTEROIDS FOR 40 YEARS.");
+      dialog_start("MY BACK HURTS, AND I HATE THE STARS.");
+      break;
+
+    case 3:
+      dialog_start("DR. FLAVIEN:");
+      dialog_start("WE ACCIDENTALLY APPLIED A GLITCH EFFECT");
+      dialog_start("TO THE REALITY ENGINE. OOPS.");
+      break;
+
+    default:
+      dialog_start("UNKNOWN LIFEFORM:");
+      dialog_start("GLURP... PLOP...");
+      break;
+  }
+}
 
 void read_news_terminal(GameData* data) {
   SaveData* save = data->current_save;
@@ -90,7 +125,7 @@ void read_news_terminal(GameData* data) {
   for(uint8_t i = 0; i < 15; i++) {
     sprintf(buf, "DECRYPTING... [%u%%]", (i * 100) / 15);
     display_message_bg(0, 8, buf);
-    if (i % 3 == 0) scroll_bkg(fast_rng(save->market_seed) % 4, fast_rng(save->market_seed) % 2);
+    if (i % 3 == 0) scroll_bkg(fast_rng(save->market_seed) % 2, fast_rng(save->market_seed) % 2);
     vsync();
     delay(50);
   }
@@ -297,20 +332,15 @@ void open_sell_menu(GameData* data) {
 void market_init(GameData* data) {
   data->state = MARKET;
 
-  data->player_x = 80;
-  data->player_y = 120;
-
   market_sub_state = M_WALKING;
 
-  set_bkg_data(BKG_TILES_OFFSET, 5, market_tiles_graphics);
+  set_bkg_data(BKG_TILES_OFFSET, 7, market_tiles_graphics);
   set_bkg_based_tiles(0, 0, 32, 32, station_registry[data->current_save->current_station_id].map, BKG_TILES_OFFSET);
 
   set_sprite_tile(0, 0);
   move_sprite(0, data->player_x, data->player_y);
 
-  scroll_x = 0;
-  scroll_y = 0;
-  apply_scroll();
+  apply_scroll_xy(0, 0);
 
   SHOW_BKG;
   SHOW_SPRITES;
@@ -440,6 +470,11 @@ void market_state(GameData* data) {
         sfx_confirm();
         read_news_terminal(data);
         return;
+
+      case NPC:
+        sfx_confirm();
+        trigger_station_npc(data);
+        break;
     }
   }
 
@@ -454,9 +489,7 @@ void market_state(GameData* data) {
   else if (cam_y - 72 > 112) cam_y = 112;
   else cam_y -= 72;
 
-  scroll_x = cam_x;
-  scroll_y = cam_y;
-  apply_scroll();
+  apply_scroll_xy(cam_x, cam_y);
 
   uint8_t sprite_x = (data->player_x - scroll_x) + 8;
   uint8_t sprite_y = (data->player_y - scroll_y) + 8;
